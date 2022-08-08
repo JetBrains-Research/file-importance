@@ -9,10 +9,8 @@ import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
 class IdeRunner : ApplicationStarter {
-
     val graphPath = "/Users/psycho/Desktop/Jetbrains/shared/graph.json"
     val informationPath = "/Users/psycho/Desktop/Jetbrains/shared/info.json"
-
 
     override fun getCommandName(): String = "mine-dependencies"
 
@@ -26,19 +24,17 @@ class IdeRunner : ApplicationStarter {
         val elements = getAllRelatedElements(psiFiles)
         val edges = buildDependencyGraph(elements)
 
-
         println("********************")
 //        nodes.forEach { println(it) }
         exportGraphToJson(edges)
         exportClasses(elements)
-
 
         exitProcess(0)
     }
 
     private fun exportClasses(elements: List<PsiElement>) {
         val result = elements
-            .mapNotNull{ e -> e as PsiClass }
+            .mapNotNull { e -> e as PsiClass }
             .map { pc -> FileInformation(pc.qualifiedName!!, pc.containingFile.virtualFile.presentableName) }
 
         writeToJson(result, informationPath)
@@ -57,10 +53,12 @@ class IdeRunner : ApplicationStarter {
     }
 
     private fun exportGraphToJson(edges: List<DependencyEdge>) {
-        val jsonEdges = edges.map{ e -> JsonDependencyEdge(
-            e.sourceElement.containingFile.virtualFile.presentableName,
-            e.destinationElement.containingFile.virtualFile.presentableName
-        )}
+        val jsonEdges = edges.map { e ->
+            JsonDependencyEdge(
+                e.sourceElement.containingFile.virtualFile.presentableName,
+                e.destinationElement.containingFile.virtualFile.presentableName
+            )
+        }
 
         try {
             val gson = Gson()
@@ -80,7 +78,7 @@ class IdeRunner : ApplicationStarter {
         elements.forEach { c ->
             val newEdges = ReferencesSearch
                 .search(c)
-                .map { r -> DependencyEdge(r.element, c)}
+                .map { r -> DependencyEdge(r.element, c) }
             edges.addAll(newEdges)
         }
         return edges
