@@ -46,10 +46,10 @@ tasks {
     }
 
     runIde {
-        val dependencyLevel: String? by project
-        val projectPath: String? by project
-        val outputDir: String? by project
-        args = listOfNotNull("mine-dependencies", dependencyLevel, projectPath, outputDir)
+//        val dependencyLevel: String? by project
+//        val projectPath: String? by project
+//        val outputDir: String? by project
+//        args = listOfNotNull("mine-dependencies", dependencyLevel, projectPath, outputDir)
         jvmArgs = listOf("-Djava.awt.headless=true")
     }
 
