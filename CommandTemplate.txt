@@ -1,0 +1,1 @@
+java -Dexport.method.list.cpu -Dexport.class.list -Dexport.csv -jar /Applications/YourKit-Java-Profiler-2022.3.app/Contents/Resources/lib/yourkit.jar  -export gradle-worker-classpath13197704238442670465txt-2022-08-04-shutdown.snapshot ./
