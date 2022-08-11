@@ -15,3 +15,7 @@ data class JsonDependencyEdge(
     val source: String,
     val destination: String
 )
+
+enum class DependencyType{
+    METHOD, CLASS
+}
