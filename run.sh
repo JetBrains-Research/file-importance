@@ -4,9 +4,9 @@ if [ $# -ne "3" ]; then
   exit 1
 fi
 
-projectPath="$(cd "$(dirname "$3")"; pwd)/$(basename "$3")"
-sharedFolder="$(cd "$(dirname "$2")"; pwd)/$(basename "$2")"
+projectPath="$(cd "$(dirname "$2")"; pwd)/$(basename "$2")"
+sharedFolder="$(cd "$(dirname "$3")"; pwd)/$(basename "$3")"
 
 graphMiner="DependencyGraph"
 
-"./$graphMiner/gradlew" --stacktrace -p "./$graphMiner" extractDependencies -PdependencyLevel="$1" -PprojectPath="$projectPath" -Poutput="$sharedFolder"
+"./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pdeplevel="$1" -Pprojectpath="$projectPath" -Poutputpath="$sharedFolder"

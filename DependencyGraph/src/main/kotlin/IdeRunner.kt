@@ -9,32 +9,66 @@ import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
 class IdeRunner : ApplicationStarter {
-    val graphPath = "/Users/psycho/Desktop/Jetbrains/shared/graph.json"
-    val informationPath = "/Users/psycho/Desktop/Jetbrains/shared/info.json"
+
+    val graphFileName = "graph.json"
+    val informationFileName = "info.json"
 
     override fun getCommandName(): String = "mine-dependencies"
 
     override fun main(args: Array<String>) {
-        println("Hello World!")
+        log(
+            "    ____                            __                         __  ____                \n" +
+                    "   / __ \\___  ____  ___  ____  ____/ /__  ____  _______  __   /  |/  (_)___  ___  _____\n" +
+                    "  / / / / _ \\/ __ \\/ _ \\/ __ \\/ __  / _ \\/ __ \\/ ___/ / / /  / /|_/ / / __ \\/ _ \\/ ___/\n" +
+                    " / /_/ /  __/ /_/ /  __/ / / / /_/ /  __/ / / / /__/ /_/ /  / /  / / / / / /  __/ /    \n" +
+                    "/_____/\\___/ .___/\\___/_/ /_/\\__,_/\\___/_/ /_/\\___/\\__, /  /_/  /_/_/_/ /_/\\___/_/     \n" +
+                    "          /_/                                     /____/                               "
+        )
 
-        val path = "/Users/psycho/Desktop/Jetbrains/RxJava-3.x"
-//        val path = "/Users/psycho/Desktop/Jetbrains/simple-springboot-app"
-//        val path = "/Users/psycho/Desktop/Jetbrains/logging-log4j2"
+        val depType = getDependencyType(args[1])
+        if (depType == null){
+            log("Can not find dependency type $args[1]")
+            exitProcess(1)
+        }
+
+        val path = args[2]
+        val outputDir = args[3]
+
+        val graphPath = "$outputDir/$graphFileName"
+        val informationPath = "$outputDir/$informationFileName"
+
         val psiFiles = getAllRelatedFiles(path)
-        val elements = getAllRelatedElements(psiFiles)
+        val elements = getAllRelatedElements(psiFiles, depType!!)
         val edges = buildDependencyGraph(elements)
 
-        println("********************")
-//        nodes.forEach { println(it) }
-        exportGraphToJson(edges)
-        exportClasses(elements)
+
+        exportGraphToJson(edges, graphPath)
+        exportClasses(elements, informationPath)
 
         exitProcess(0)
     }
 
-    private fun exportClasses(elements: List<PsiElement>) {
-        val result = elements
-            .mapNotNull { e -> e as PsiClass }
+    private fun exportClasses(elements: List<PsiElement>, informationPath: String) {
+        log("Exporting class informaiton")
+        if (elements.isEmpty()) {
+            return
+        }
+
+
+        var classes: List<PsiClass>
+        if (elements[0] is PsiClass) {
+            classes = elements
+                .mapNotNull { e -> e as PsiClass }
+        } else if (elements[0] is PsiMethod) {
+            classes = elements
+                .mapNotNull { e -> e as PsiMethod }
+                .mapNotNull { pm -> pm.containingClass }
+        } else {
+            log("Unrecognized PsiElement")
+            return;
+        }
+
+        val result = classes
             .map { pc -> FileInformation(pc.qualifiedName!!, pc.containingFile.virtualFile.presentableName) }
 
         writeToJson(result, informationPath)
@@ -52,7 +86,9 @@ class IdeRunner : ApplicationStarter {
         }
     }
 
-    private fun exportGraphToJson(edges: List<DependencyEdge>) {
+    private fun exportGraphToJson(edges: List<DependencyEdge>, path: String) {
+        log("exporting graph to $path")
+
         val jsonEdges = edges.map { e ->
             JsonDependencyEdge(
                 e.sourceElement.containingFile.virtualFile.presentableName,
@@ -63,7 +99,7 @@ class IdeRunner : ApplicationStarter {
         try {
             val gson = Gson()
             val jsonString = gson.toJson(jsonEdges)
-            File(graphPath).printWriter().use {
+            File(path).printWriter().use {
                 it.write(jsonString)
             }
         } catch (e: Exception) {
@@ -72,7 +108,7 @@ class IdeRunner : ApplicationStarter {
     }
 
     private fun buildDependencyGraph(elements: List<PsiElement>): MutableList<DependencyEdge> {
-        println("Building graph")
+        log("Building graph")
         val edges = mutableListOf<DependencyEdge>()
 
         elements.forEach { c ->
@@ -84,13 +120,20 @@ class IdeRunner : ApplicationStarter {
         return edges
     }
 
-    private fun getAllRelatedElements(psiFiles: List<PsiFile?>): List<PsiElement> {
-        val elements = getAllPsiElements(psiFiles, PsiClass::class.java)
+    private fun getAllRelatedElements(psiFiles: List<PsiFile?>, depType: DependencyType): List<PsiElement> {
+
+        val clazz = if (depType == DependencyType.CLASS) {
+            PsiClass::class.java
+        } else {
+            PsiMethod::class.java
+        }
+
+        val elements = getAllPsiElements(psiFiles, clazz)
         return elements
     }
 
     private fun getAllRelatedFiles(path: String): List<PsiFile?> {
-        println("Getting All related files")
+        log("Getting All related files")
 
         val project = ProjectUtil.openOrImport(Path(path))
         val files = FilenameIndex.getAllFilesByExt(project, "java")
@@ -99,7 +142,7 @@ class IdeRunner : ApplicationStarter {
     }
 
     private fun <T> getAllPsiElements(psiFiles: List<PsiFile?>, clazz: Class<T>): List<PsiElement> {
-        println("Getting All related elements")
+        log("Getting All related elements")
         val elements = mutableListOf<PsiElement>()
         psiFiles.forEach {
             it?.acceptChildren(object : JavaRecursiveElementVisitor() {
@@ -113,5 +156,17 @@ class IdeRunner : ApplicationStarter {
             })
         }
         return elements
+    }
+
+    private fun log(log: String) {
+        println(log)
+    }
+
+    private fun getDependencyType(name: String): DependencyType? {
+        return try {
+            DependencyType.valueOf(name)
+        } catch (e: Exception) {
+            null
+        }
     }
 }
