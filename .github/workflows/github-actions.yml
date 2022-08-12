@@ -1,0 +1,45 @@
+name: File Improtance Calculation
+on: 
+  push:
+    branches: main
+  pull_request:
+    branches: main
+
+jobs:
+  dependency-miner:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: 11
+        
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+    
+    - name: Execute Gradle build
+      working-directory: ./DependencyGraph
+      run: ./gradlew build
+  
+  dependency-analyzer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+
+    - name: Setup pylint
+      run: pip install pylint
+      
+    - name: Intall requirements
+      working-directory: ./DependencyGraphAnalysis
+      run: pip install -r requirements.txt
+
+    - name: Check errors
+      working-directory: ./DependencyGraphAnalysis
+      run: pylint -E ./code
+      
+      
+    
