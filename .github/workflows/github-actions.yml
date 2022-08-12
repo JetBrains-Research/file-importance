@@ -1,6 +1,10 @@
 name: File Improtance Calculation
-on: [pull_request, push]
-branches: [main]
+on: 
+  push:
+    branches: main
+  pull_request:
+    branches: main
+
 jobs:
   dependency-miner:
     runs-on: ubuntu-latest
