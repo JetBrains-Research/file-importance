@@ -16,6 +16,12 @@ data class JsonDependencyEdge(
     val destination: String
 )
 
+data class DependencyWeightedEdge(
+    val source: String,
+    val destination: String,
+    val weight: Int
+)
+
 enum class DependencyType{
     METHOD, CLASS
 }

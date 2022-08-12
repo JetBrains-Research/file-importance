@@ -10,8 +10,9 @@ import kotlin.system.exitProcess
 
 class IdeRunner : ApplicationStarter {
 
-    val graphFileName = "graph.json"
-    val informationFileName = "info.json"
+    private val graphFileName = "graph.json"
+    private val informationFileName = "info.json"
+    private val gson = Gson()
 
     override fun getCommandName(): String = "mine-dependencies"
 
@@ -25,8 +26,7 @@ class IdeRunner : ApplicationStarter {
                     "          /_/                                     /____/                               "
         )
 
-        val depType = getDependencyType(args[1])
-        if (depType == null){
+        val depType = getDependencyType(args[1]) ?: run {
             log("Can not find dependency type $args[1]")
             exitProcess(1)
         }
@@ -38,9 +38,8 @@ class IdeRunner : ApplicationStarter {
         val informationPath = "$outputDir/$informationFileName"
 
         val psiFiles = getAllRelatedFiles(path)
-        val elements = getAllRelatedElements(psiFiles, depType!!)
+        val elements = getAllRelatedElements(psiFiles, depType)
         val edges = buildDependencyGraph(elements)
-
 
         exportGraphToJson(edges, graphPath)
         exportClasses(elements, informationPath)
@@ -49,34 +48,36 @@ class IdeRunner : ApplicationStarter {
     }
 
     private fun exportClasses(elements: List<PsiElement>, informationPath: String) {
-        log("Exporting class informaiton")
+        log("Exporting class information")
         if (elements.isEmpty()) {
             return
         }
 
-
-        var classes: List<PsiClass>
-        if (elements[0] is PsiClass) {
-            classes = elements
-                .mapNotNull { e -> e as PsiClass }
+        val classes: List<PsiClass> = if (elements[0] is PsiClass) {
+            elements
+                .map { e -> e as PsiClass }
         } else if (elements[0] is PsiMethod) {
-            classes = elements
-                .mapNotNull { e -> e as PsiMethod }
+            elements
+                .map { e -> e as PsiMethod }
                 .mapNotNull { pm -> pm.containingClass }
         } else {
             log("Unrecognized PsiElement")
-            return;
+            return
         }
 
         val result = classes
-            .map { pc -> FileInformation(pc.qualifiedName!!, pc.containingFile.virtualFile.presentableName) }
+            .map { pc ->
+                FileInformation(
+                    pc.qualifiedName ?: "Some Local/Anonymous class",
+                    pc.containingFile.virtualFile.presentableName
+                )
+            }
 
         writeToJson(result, informationPath)
     }
 
     private fun writeToJson(data: List<FileInformation>, path: String) {
         try {
-            val gson = Gson()
             val jsonString = gson.toJson(data)
             File(path).printWriter().use {
                 it.write(jsonString)
@@ -89,15 +90,19 @@ class IdeRunner : ApplicationStarter {
     private fun exportGraphToJson(edges: List<DependencyEdge>, path: String) {
         log("exporting graph to $path")
 
-        val jsonEdges = edges.map { e ->
-            JsonDependencyEdge(
-                e.sourceElement.containingFile.virtualFile.presentableName,
-                e.destinationElement.containingFile.virtualFile.presentableName
-            )
-        }
+        val jsonEdges = edges
+            .map { e ->
+                JsonDependencyEdge(
+                    e.sourceElement.containingFile.virtualFile.presentableName,
+                    e.destinationElement.containingFile.virtualFile.presentableName
+                )
+            }
+            .groupBy { it }
+            .map { (edge, listOfEdges) ->
+                DependencyWeightedEdge(edge.source, edge.destination, listOfEdges.size)
+            }
 
         try {
-            val gson = Gson()
             val jsonString = gson.toJson(jsonEdges)
             File(path).printWriter().use {
                 it.write(jsonString)
@@ -158,15 +163,12 @@ class IdeRunner : ApplicationStarter {
         return elements
     }
 
-    private fun log(log: String) {
-        println(log)
-    }
+    private fun log(log: String) = println(log)
 
-    private fun getDependencyType(name: String): DependencyType? {
-        return try {
+    private fun getDependencyType(name: String) =
+        try {
             DependencyType.valueOf(name)
         } catch (e: Exception) {
             null
         }
-    }
 }
