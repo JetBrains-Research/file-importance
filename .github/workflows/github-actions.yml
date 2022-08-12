@@ -1,7 +1,7 @@
 name: File Improtance Calculation
 on: [pull_request, push]
 jobs:
-  gradle:
+  dependency-miner:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -16,3 +16,25 @@ jobs:
     - name: Execute Gradle build
       working-directory: ./DependencyGraph
       run: ./gradlew build
+  
+  dependency-analyzer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+
+    - name: Setup pylint
+      run: pip install pylint
+      
+    - name: Intall requirements
+      working-directory: ./DependencyGraphAnalysis
+      run: pip install requirements.txt
+
+    - name: Check errors
+      working-directory: ./DependencyGraphAnalysis
+      run: pylint **/*.py
+      
+      
+    
