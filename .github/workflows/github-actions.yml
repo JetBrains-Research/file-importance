@@ -1,5 +1,6 @@
 name: File Improtance Calculation
 on: [pull_request, push]
+# branches: [main]
 jobs:
   dependency-miner:
     runs-on: ubuntu-latest
@@ -30,7 +31,7 @@ jobs:
       
     - name: Intall requirements
       working-directory: ./DependencyGraphAnalysis
-      run: pip install requirements.txt
+      run: pip install -r requirements.txt
 
     - name: Check errors
       working-directory: ./DependencyGraphAnalysis
