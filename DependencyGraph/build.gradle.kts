@@ -48,8 +48,9 @@ tasks {
     runIde {
         val deplevel: String? by project
         val projectpath: String? by project
-        val outputpath: String? by project
-        args = listOfNotNull("mine-dependencies", deplevel, projectpath, outputpath)
+        val graphpath: String? by project
+        val infopath: String? by project
+        args = listOfNotNull("mine-dependencies", deplevel, projectpath, graphpath, infopath)
         jvmArgs = listOf("-Djava.awt.headless=true")
     }
 

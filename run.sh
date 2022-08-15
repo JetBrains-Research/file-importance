@@ -8,16 +8,17 @@ projectPath="$(cd "$(dirname "$2")"; pwd)/$(basename "$2")"
 
 graphMiner="DependencyGraph"
 graphAnalyzer="DependencyGraphAnalysis"
-outputFolderName="./output"
+outputFolderName="output"
+rm -rf "$outputFolderName" 
 mkdir "$outputFolderName"
 
-outputFolderPath="$(cd "$(dirname "$outputFolderName")"; pwd)/$(basename "$outputFolderName")"
+outputFolderPath="$(pwd)/$outputFolderName"
 
 graphFilePath="$outputFolderPath/graph.json"
 infoFilePath="$outputFolderPath/info.json"
 graphImagePath="$outputFolderPath/graph.png"
 
-"./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pdeplevel="$1" -Pprojectpath="$projectPath" -Poutputpath="$outputFolderPath"
+"./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pdeplevel="$1" -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Pinfopath="$infoFilePath"
 
 
 cd "$graphAnalyzer"
