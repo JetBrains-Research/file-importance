@@ -10,10 +10,9 @@ import kotlin.system.exitProcess
 
 class IdeRunner : ApplicationStarter {
 
-    val graphFileName = "graph.json"
-    val informationFileName = "info.json"
-
     override fun getCommandName(): String = "mine-dependencies"
+
+    private val gson = Gson()
 
     override fun main(args: Array<String>) {
         log(
@@ -25,20 +24,17 @@ class IdeRunner : ApplicationStarter {
                     "          /_/                                     /____/                               "
         )
 
-        val depType = getDependencyType(args[1])
-        if (depType == null){
+        val depType = getDependencyType(args[1]) ?: run {
             log("Can not find dependency type $args[1]")
             exitProcess(1)
         }
 
         val path = args[2]
-        val outputDir = args[3]
-
-        val graphPath = "$outputDir/$graphFileName"
-        val informationPath = "$outputDir/$informationFileName"
+        val graphPath = args[3]
+        val informationPath = args[4]
 
         val psiFiles = getAllRelatedFiles(path)
-        val elements = getAllRelatedElements(psiFiles, depType!!)
+        val elements = getAllRelatedElements(psiFiles, depType)
         val edges = buildDependencyGraph(elements)
 
 
@@ -55,13 +51,12 @@ class IdeRunner : ApplicationStarter {
         }
 
 
-        var classes: List<PsiClass>
-        if (elements[0] is PsiClass) {
-            classes = elements
-                .mapNotNull { e -> e as PsiClass }
+        val classes = if (elements[0] is PsiClass) {
+            elements
+                .map { e -> e as PsiClass }
         } else if (elements[0] is PsiMethod) {
-            classes = elements
-                .mapNotNull { e -> e as PsiMethod }
+            elements
+                .map { e -> e as PsiMethod }
                 .mapNotNull { pm -> pm.containingClass }
         } else {
             log("Unrecognized PsiElement")
@@ -69,14 +64,18 @@ class IdeRunner : ApplicationStarter {
         }
 
         val result = classes
-            .map { pc -> FileInformation(pc.qualifiedName!!, pc.containingFile.virtualFile.presentableName) }
+            .map { pc ->
+                FileInformation(
+                    pc.qualifiedName ?: "Some Local/Anonymous class",
+                    pc.containingFile.virtualFile.presentableName
+                )
+            }
 
         writeToJson(result, informationPath)
     }
 
     private fun writeToJson(data: List<FileInformation>, path: String) {
         try {
-            val gson = Gson()
             val jsonString = gson.toJson(data)
             File(path).printWriter().use {
                 it.write(jsonString)
@@ -97,7 +96,6 @@ class IdeRunner : ApplicationStarter {
         }
 
         try {
-            val gson = Gson()
             val jsonString = gson.toJson(jsonEdges)
             File(path).printWriter().use {
                 it.write(jsonString)
@@ -159,7 +157,7 @@ class IdeRunner : ApplicationStarter {
     }
 
     private fun log(log: String) {
-        println(log)
+        println("****Miner**** $log")
     }
 
     private fun getDependencyType(name: String): DependencyType? {

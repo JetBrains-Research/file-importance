@@ -8,7 +8,7 @@ import sys
 
 
 def log(log):
-    print(log)
+    print(f"****Analyzer**** {log}")
 
 
 def generate_random_color():
@@ -73,12 +73,12 @@ print_banner()
 # Parsing parameters
 graphFilePath = sys.argv[1]
 if graphFilePath is None:
-    print("Please enter graph file path")
+    log("Please enter graph file path")
     exit(1)
 
 outputImagePath = sys.argv[2]
 if outputImagePath is None:
-    print("Please enter output image file path")
+    log("Please enter output image file path")
     exit(10)
 
 graph = load_graph(graphFilePath)
