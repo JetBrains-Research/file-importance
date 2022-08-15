@@ -3,9 +3,9 @@ ICTL + BILSEN project on using file importance in risk assessment
 
 ## How to run
 ### Requirements
--Any type of unix shell
--JDK 11
--Python 3 (Suggested python 3.10)
+- Any type of unix shell
+- JDK 11
+- Python 3 (Suggested python 3.10)
 
 ### How to launch
 1. Clone a java project somewhere in your machine (It is suggested to keep it out of this project folders)
