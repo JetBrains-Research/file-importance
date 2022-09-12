@@ -27,7 +27,7 @@ class IdeRunner : ApplicationStarter {
                     "          /_/                                     /____/                               "
         )
 
-        val depType = getDependencyType(args[1]) ?: run {
+        val dependencyType = getDependencyType(args[1]) ?: run {
             log("Can not find dependency type $args[1]")
             exitProcess(1)
         }
@@ -42,9 +42,8 @@ class IdeRunner : ApplicationStarter {
             log("We're smart now!")
 
             val psiFiles = getAllRelatedFiles(project)
-            val elements = getAllRelatedElements(psiFiles, depType)
+            val elements = getAllRelatedElements(psiFiles, dependencyType)
             val edges = buildDependencyGraph(elements)
-
 
             exportGraphToJson(edges, graphPath)
             exportClasses(elements, informationPath)
@@ -53,30 +52,28 @@ class IdeRunner : ApplicationStarter {
         }
     }
 
+    private fun PsiElement.toClass() = when (this) {
+        is PsiClass -> this
+        is PsiMethod -> this.containingClass
+        else -> {
+            log("Unrecognized PsiElement")
+            null
+        }
+    }
+
     private fun exportClasses(elements: List<PsiElement>, informationPath: String) {
-        log("Exporting class informaiton")
+        log("Exporting class information")
         if (elements.isEmpty()) {
             return
         }
 
-
-        val classes = if (elements[0] is PsiClass) {
-            elements
-                .map { e -> e as PsiClass }
-        } else if (elements[0] is PsiMethod) {
-            elements
-                .map { e -> e as PsiMethod }
-                .mapNotNull { pm -> pm.containingClass }
-        } else {
-            log("Unrecognized PsiElement")
-            return
-        }
+        val classes = elements.mapNotNull { it.toClass() }
 
         val result = classes
-            .map { pc ->
+            .map { psiClass ->
                 FileInformation(
-                    pc.qualifiedName ?: "Some Local/Anonymous class",
-                    pc.containingFile.virtualFile.presentableName
+                    psiClass.qualifiedName ?: "Some Local/Anonymous class",
+                    psiClass.containingFile.virtualFile.presentableName
                 )
             }
 
@@ -84,8 +81,8 @@ class IdeRunner : ApplicationStarter {
     }
 
     private fun writeToJson(data: List<FileInformation>, path: String) {
+        val jsonString = gson.toJson(data)
         try {
-            val jsonString = gson.toJson(data)
             File(path).printWriter().use {
                 it.write(jsonString)
             }
@@ -104,8 +101,9 @@ class IdeRunner : ApplicationStarter {
             )
         }
 
+        val jsonString = gson.toJson(jsonEdges)
+
         try {
-            val jsonString = gson.toJson(jsonEdges)
             File(path).printWriter().use {
                 it.write(jsonString)
             }
@@ -127,16 +125,13 @@ class IdeRunner : ApplicationStarter {
         return edges
     }
 
-    private fun getAllRelatedElements(psiFiles: List<PsiFile?>, depType: DependencyType): List<PsiElement> {
-
-        val clazz = if (depType == DependencyType.CLASS) {
-            PsiClass::class.java
-        } else {
-            PsiMethod::class.java
+    private fun getAllRelatedElements(psiFiles: List<PsiFile?>, dependencyType: DependencyType): List<PsiElement> {
+        val clazz = when (dependencyType) {
+            DependencyType.CLASS -> PsiClass::class.java
+            DependencyType.METHOD -> PsiMethod::class.java
         }
 
-        val elements = getAllPsiElements(psiFiles, clazz)
-        return elements
+        return getAllPsiElements(psiFiles, clazz)
     }
 
     private fun getAllRelatedFiles(project: Project): List<PsiFile?> {
@@ -169,11 +164,11 @@ class IdeRunner : ApplicationStarter {
         println("****Miner**** $log")
     }
 
-    private fun getDependencyType(name: String): DependencyType? {
-        return try {
+    private fun getDependencyType(name: String) =
+        try {
             DependencyType.valueOf(name)
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             null
         }
-    }
+
 }
