@@ -1,6 +1,8 @@
 import com.google.gson.Gson
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationStarter
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.searches.ReferencesSearch
@@ -14,6 +16,7 @@ class IdeRunner : ApplicationStarter {
 
     private val gson = Gson()
 
+    @Deprecated("Deprecated in Java")
     override fun main(args: Array<String>) {
         log(
             "    ____                            __                         __  ____                \n" +
@@ -29,19 +32,25 @@ class IdeRunner : ApplicationStarter {
             exitProcess(1)
         }
 
-        val path = args[2]
+        val project = ProjectUtil.openOrImport(Path(args[2]))
+        val dumbService = project.getService(DumbService::class.java)
+
         val graphPath = args[3]
         val informationPath = args[4]
 
-        val psiFiles = getAllRelatedFiles(path)
-        val elements = getAllRelatedElements(psiFiles, depType)
-        val edges = buildDependencyGraph(elements)
+        dumbService.runWhenSmart {
+            log("We're smart now!")
+
+            val psiFiles = getAllRelatedFiles(project)
+            val elements = getAllRelatedElements(psiFiles, depType)
+            val edges = buildDependencyGraph(elements)
 
 
-        exportGraphToJson(edges, graphPath)
-        exportClasses(elements, informationPath)
+            exportGraphToJson(edges, graphPath)
+            exportClasses(elements, informationPath)
 
-        exitProcess(0)
+            exitProcess(0)
+        }
     }
 
     private fun exportClasses(elements: List<PsiElement>, informationPath: String) {
@@ -60,7 +69,7 @@ class IdeRunner : ApplicationStarter {
                 .mapNotNull { pm -> pm.containingClass }
         } else {
             log("Unrecognized PsiElement")
-            return;
+            return
         }
 
         val result = classes
@@ -130,12 +139,12 @@ class IdeRunner : ApplicationStarter {
         return elements
     }
 
-    private fun getAllRelatedFiles(path: String): List<PsiFile?> {
+    private fun getAllRelatedFiles(project: Project): List<PsiFile?> {
         log("Getting All related files")
 
-        val project = ProjectUtil.openOrImport(Path(path))
         val files = FilenameIndex.getAllFilesByExt(project, "java")
         val psiManager = PsiManager.getInstance(project)
+
         return files.mapNotNull { f -> psiManager.findFile(f) }
     }
 
