@@ -1,6 +1,7 @@
 <idea-plugin>
     <id>org.example.dependencies-plugin-idea</id>
-    <name>depedencies-miner</name>
+    <name>Dependencies-Miner</name>
+    <vendor>ictl</vendor>
 
     <description>A plugin that allows dependencies data mining</description>
 
@@ -12,7 +13,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <appStarter implementation="IdeRunner"/>
+        <appStarter implementation="org.jetbrains.research.ictl.fileimportance.IdeRunner"/>
     </extensions>
 
     <actions>
