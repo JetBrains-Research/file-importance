@@ -4,6 +4,7 @@ plugins {
     id("java")
     id("org.jetbrains.intellij") version "1.9.0"
     kotlin("jvm") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.10"
     application
 }
 
@@ -22,7 +23,7 @@ intellij {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("com.google.code.gson:gson:2.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
 }
 
 tasks.test {

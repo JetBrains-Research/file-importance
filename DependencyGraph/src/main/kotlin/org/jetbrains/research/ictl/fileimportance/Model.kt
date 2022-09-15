@@ -1,22 +1,20 @@
 package org.jetbrains.research.ictl.fileimportance
 
 import com.intellij.psi.PsiElement
+import kotlinx.serialization.Serializable
 
-data class DependencyEdge(
-    val sourceElement: PsiElement,
-    val destinationElement: PsiElement,
-)
-
+@Serializable
 data class FileInformation(
     val elementName: String,
     val fileName: String
 )
 
-data class JsonDependencyEdge(
+@Serializable
+data class DependencyEdge(
     val source: String,
     val destination: String
 )
 
-enum class DependencyType{
+enum class DependencyType {
     METHOD, CLASS
 }

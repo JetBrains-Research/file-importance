@@ -3,6 +3,7 @@ package org.jetbrains.research.ictl.fileimportance
 import com.intellij.util.io.exists
 import java.io.File
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
@@ -22,7 +23,19 @@ data class Args(val dependencyType: DependencyType, val projectPath: Path, val g
                 exitProcess(1)
             }
 
-            return Args(dependencyType, projectPath, File(args[3]), File(args[4]))
+            val graphFile = Paths.get(args[3]).toFile()
+            if (!graphFile.exists() && !graphFile.createNewFile()) {
+                IdeRunner.log("Could not create ${graphFile.path} does not exist")
+                exitProcess(1)
+            }
+
+            val infoFile = File(args[4])
+            if (!infoFile.exists() && !infoFile.createNewFile()) {
+                IdeRunner.log("Could not create ${infoFile.path} does not exist")
+                exitProcess(1)
+            }
+
+            return Args(dependencyType, projectPath, graphFile, infoFile)
         }
     }
 }

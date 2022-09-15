@@ -1,6 +1,5 @@
 package org.jetbrains.research.ictl.fileimportance
 
-import com.google.gson.Gson
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationStarter
 import com.intellij.openapi.project.DumbService
@@ -8,22 +7,23 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.searches.ReferencesSearch
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToStream
 import java.io.File
 import kotlin.system.exitProcess
 
 class IdeRunner : ApplicationStarter {
 
     override fun getCommandName(): String = "mine-dependencies"
-
-    private val gson = Gson()
     override fun main(args: MutableList<String>) {
         log(
             "\n    ____                            __                         __  ____                \n" +
-            "   / __ \\___  ____  ___  ____  ____/ /__  ____  _______  __   /  |/  (_)___  ___  _____\n" +
-            "  / / / / _ \\/ __ \\/ _ \\/ __ \\/ __  / _ \\/ __ \\/ ___/ / / /  / /|_/ / / __ \\/ _ \\/ ___/\n" +
-            " / /_/ /  __/ /_/ /  __/ / / / /_/ /  __/ / / / /__/ /_/ /  / /  / / / / / /  __/ /    \n" +
-            "/_____/\\___/ .___/\\___/_/ /_/\\__,_/\\___/_/ /_/\\___/\\__, /  /_/  /_/_/_/ /_/\\___/_/     \n" +
-            "          /_/                                     /____/                               "
+                    "   / __ \\___  ____  ___  ____  ____/ /__  ____  _______  __   /  |/  (_)___  ___  _____\n" +
+                    "  / / / / _ \\/ __ \\/ _ \\/ __ \\/ __  / _ \\/ __ \\/ ___/ / / /  / /|_/ / / __ \\/ _ \\/ ___/\n" +
+                    " / /_/ /  __/ /_/ /  __/ / / / /_/ /  __/ / / / /__/ /_/ /  / /  / / / / / /  __/ /    \n" +
+                    "/_____/\\___/ .___/\\___/_/ /_/\\__,_/\\___/_/ /_/\\___/\\__, /  /_/  /_/_/_/ /_/\\___/_/     \n" +
+                    "          /_/                                     /____/                               "
         )
 
         val (dependencyType, projectPath, graphFile, infoFile) = Args.parse(args)
@@ -41,14 +41,15 @@ class IdeRunner : ApplicationStarter {
         }
 
         dumbService.runWhenSmart {
-            log("We're smart now!")
+            log("Indexing has finished")
 
             val psiFiles = getAllRelatedFiles(project)
-            val elements = getAllRelatedElements(psiFiles, dependencyType)
-            val edges = buildDependencyGraph(elements)
 
-            exportGraphToJson(edges, graphFile)
+            val elements = getAllRelatedElements(psiFiles, dependencyType)
             exportClasses(elements, infoFile)
+
+            val edges = buildDependencyGraph(elements)
+            writeToJson(edges, graphFile)
 
             exitProcess(0)
         }
@@ -65,14 +66,10 @@ class IdeRunner : ApplicationStarter {
     }
 
     private fun exportClasses(elements: List<PsiElement>, infoFile: File) {
-        log("Exporting class information")
-        if (elements.isEmpty()) {
-            return
-        }
+        log("Exporting class information tp ${infoFile.absolutePath}")
 
-        val classes = elements.mapNotNull { it.toClass() }
-
-        val result = classes
+        val result = elements
+            .mapNotNull { it.toClass() }
             .map { psiClass ->
                 FileInformation(
                     psiClass.qualifiedName ?: "Some Local/Anonymous class",
@@ -83,53 +80,26 @@ class IdeRunner : ApplicationStarter {
         writeToJson(result, infoFile)
     }
 
-    private fun writeToJson(data: List<FileInformation>, file: File) {
-        val jsonString = gson.toJson(data)
-        try {
-            file.printWriter().use {
-                it.write(jsonString)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+    private fun PsiElement.getFileName() = containingFile.virtualFile.presentableName
+
+    private fun buildDependencyGraph(elements: List<PsiElement>): List<DependencyEdge> {
+        var lastCheckpoint = 0 // DEBUG
+        var currSize = 0 // DEBUG
+        log("Building a graph for ${elements.size} elements")
+
+        return elements.flatMap { psiElement ->
+            ReferencesSearch
+                .search(psiElement)
+                .map { psiReference ->
+                    DependencyEdge(psiReference.element.getFileName(), psiElement.getFileName())
+                }.also {
+                    currSize += it.size
+                    if (currSize - lastCheckpoint > 1000) {
+                        lastCheckpoint = currSize
+                        log("Build $lastCheckpoint edges so far")
+                    }
+                }
         }
-    }
-
-    private fun exportGraphToJson(edges: List<DependencyEdge>, file: File) {
-        log("exporting graph to ${file.canonicalPath}")
-
-        val jsonEdges = edges.map { e ->
-            JsonDependencyEdge(
-                e.sourceElement.containingFile.virtualFile.presentableName,
-                e.destinationElement.containingFile.virtualFile.presentableName
-            )
-        }
-
-        val jsonString = gson.toJson(jsonEdges)
-
-        try {
-            file.printWriter().use {
-                it.write(jsonString)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun buildDependencyGraph(elements: List<PsiElement>): MutableList<DependencyEdge> {
-        log("Building graph for ${elements.size} elements")
-        val edges = mutableListOf<DependencyEdge>()
-        var lastCheckpoint = 0
-
-        elements.forEach { c ->
-            val newEdges = ReferencesSearch
-                .search(c)
-                .map { r -> DependencyEdge(r.element, c) }
-            if (edges.addAll(newEdges) && edges.size > lastCheckpoint + 1000) {
-                println("\t${edges.size} edges")
-                lastCheckpoint = edges.size
-            }
-        }
-        return edges
     }
 
     private fun getAllRelatedElements(psiFiles: List<PsiFile?>, dependencyType: DependencyType): List<PsiElement> {
@@ -168,6 +138,13 @@ class IdeRunner : ApplicationStarter {
     }
 
     companion object {
+        @OptIn(ExperimentalSerializationApi::class)
+        inline fun <reified T> writeToJson(what: T, file: File) = try {
+            Json.encodeToStream(what, file.outputStream())
+        } catch (e: Exception) {
+            log(e.stackTraceToString())
+        }
+
         fun log(log: String) {
             println("****Miner**** $log")
         }
