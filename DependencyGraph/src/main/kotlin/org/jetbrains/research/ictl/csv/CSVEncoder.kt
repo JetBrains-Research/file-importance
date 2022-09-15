@@ -14,51 +14,57 @@ internal class CSVEncoder(
     private val lineSeparator: String,
     override val serializersModule: SerializersModule
 ) : AbstractEncoder() {
-    private var afterFirst = false
-    private var level = 0
+    private var first = true
+    private var depth = 0
 
     override fun encodeValue(value: Any) {
-        if (afterFirst) {
+        if (!first) {
             builder.append(separator)
         }
+        first = false
         builder.append(value)
-        afterFirst = true
+
     }
 
     override fun encodeNull() {
-        if (afterFirst) {
+        if (!first) {
             builder.append(separator)
         }
-        afterFirst = true
+        first = false
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-        if (level == 0) {
-            builder.append(lineSeparator)
-            afterFirst = false
-        }
-        level++
+//        if (depth == 0) {
+//            builder.append(lineSeparator)
+//            first = true
+//        }
+        depth++
         return this
     }
 
     override fun beginCollection(descriptor: SerialDescriptor, collectionSize: Int): CompositeEncoder = this
 
     override fun endStructure(descriptor: SerialDescriptor) {
-        level--
+        depth--
+        if (depth == 0) {
+            builder.append(lineSeparator)
+            first = true
+        }
     }
 
-    override fun encodeInline(descriptor: SerialDescriptor): Encoder {
-        if (level == 0) {
+    override fun encodeInline(inlineDescriptor: SerialDescriptor): Encoder {
+        if (depth == 0) {
             builder.append(lineSeparator)
-            afterFirst = false
+            first = true
         }
         return this
     }
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) {
-        if (afterFirst) {
+        if (!first) {
             builder.append(separator)
         }
+        first = false
         builder.append(enumDescriptor.getElementName(index))
     }
 }

@@ -1,5 +1,10 @@
 package org.jetbrains.research.ictl.csv
+
 import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.descriptors.elementDescriptors
 import kotlinx.serialization.modules.*
 
 /**
@@ -15,18 +20,18 @@ sealed class CSVFormat(
         CSVFormat(separator, lineSeparator, serializersModule)
 
     companion object Default : CSVFormat(
-        ",", "\n", EmptySerializersModule()
+        ",", System.lineSeparator(), EmptySerializersModule()
     ) {
         operator fun invoke(
             separator: String = ",",
-            lineSeparator: String = "\n",
+            lineSeparator: String = System.lineSeparator(),
             serializersModule: SerializersModule = EmptySerializersModule()
         ): CSVFormat =
             Custom(separator, lineSeparator, serializersModule)
     }
 
     override fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
-        deserializer.descriptor.checkForLists()
+        // TODO: check first line to match the fields
         val lines = string.split(lineSeparator)
         val data = lines.drop(1).map { it.split(separator) }
         return deserializer.deserialize(
@@ -37,16 +42,24 @@ sealed class CSVFormat(
         )
     }
 
-    override fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String = buildString {
-        serializer.descriptor.checkForLists()
-        var afterFirst = false
+    override fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String =
+        encodeToString(serializer, value, true)
 
-        serializer.descriptor.flatNames.forEach {
-            if (afterFirst) {
-                append(separator)
+    inline fun <reified T> encodeToString(value: T, withHeader: Boolean): String =
+        encodeToString(serializersModule.serializer(), value, withHeader)
+
+    fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T, withHeader: Boolean): String = buildString {
+        var first = true
+
+        if (withHeader) {
+            serializer.descriptor.names.forEach {
+                if (!first) {
+                    append(separator)
+                }
+                first = false
+                append(it)
             }
-            append(it)
-            afterFirst = true
+            append(lineSeparator)
         }
 
         serializer.serialize(
@@ -54,4 +67,19 @@ sealed class CSVFormat(
             value = value
         )
     }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    internal val SerialDescriptor.names: Sequence<String>
+        get() = sequence {
+            elementDescriptors.forEachIndexed { index, descriptor ->
+                val name = getElementName(index)
+                when {
+                    descriptor.elementsCount == 0 -> yield(name)
+                    descriptor.kind == SerialKind.ENUM -> yield(name)
+                    descriptor.kind is StructureKind.MAP -> yield(name)
+                    descriptor.kind is StructureKind.LIST -> yield(name)
+                    else -> yieldAll(descriptor.names)
+                }
+            }
+        }
 }
