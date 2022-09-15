@@ -1,12 +1,13 @@
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
+package org.jetbrains.research.ictl.fileimportance
 
-public data class DependencyEdge(
+import com.intellij.psi.PsiElement
+
+data class DependencyEdge(
     val sourceElement: PsiElement,
     val destinationElement: PsiElement,
 )
 
-public data class FileInformation(
+data class FileInformation(
     val elementName: String,
     val fileName: String
 )
