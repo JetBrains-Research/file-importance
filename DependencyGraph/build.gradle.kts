@@ -51,7 +51,7 @@ tasks {
         val graphpath: String? by project
         val infopath: String? by project
         args = listOfNotNull("mine-dependencies", deplevel, projectpath, graphpath, infopath)
-        jvmArgs = listOf("-Djava.awt.headless=true")
+        jvmArgs = listOf("-Xmx8g", "-Djava.awt.headless=true")
     }
 
     register("extractDependencies") {
