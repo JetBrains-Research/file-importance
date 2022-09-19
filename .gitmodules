@@ -1,0 +1,3 @@
+[submodule "Truck-Factor"]
+	path = Truck-Factor
+	url = git@github.com:vharatian/Truck-Factor.git

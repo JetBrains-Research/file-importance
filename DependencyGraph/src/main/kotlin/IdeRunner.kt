@@ -4,7 +4,9 @@ import com.intellij.openapi.application.ApplicationStarter
 import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.searches.ReferencesSearch
+import org.jetbrains.kotlin.idea.actions.pathBeforeJ2K
 import java.io.File
+import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
@@ -13,6 +15,7 @@ class IdeRunner : ApplicationStarter {
     override fun getCommandName(): String = "mine-dependencies"
 
     private val gson = Gson()
+    private var ROOT_PATH = ""
 
     override fun main(args: Array<String>) {
         log(
@@ -29,11 +32,11 @@ class IdeRunner : ApplicationStarter {
             exitProcess(1)
         }
 
-        val path = args[2]
+        ROOT_PATH = args[2]
         val graphPath = args[3]
         val informationPath = args[4]
 
-        val psiFiles = getAllRelatedFiles(path)
+        val psiFiles = getAllRelatedFiles(ROOT_PATH)
         val elements = getAllRelatedElements(psiFiles, depType)
         val edges = buildDependencyGraph(elements)
 
@@ -45,7 +48,7 @@ class IdeRunner : ApplicationStarter {
     }
 
     private fun exportClasses(elements: List<PsiElement>, informationPath: String) {
-        log("Exporting class informaiton")
+        log("Exporting class information")
         if (elements.isEmpty()) {
             return
         }
@@ -85,13 +88,18 @@ class IdeRunner : ApplicationStarter {
         }
     }
 
+    private fun getProjectPath(element: PsiElement): String {
+        val path = element.containingFile.virtualFile.path
+        return path.replace("$ROOT_PATH/", "")
+    }
+
     private fun exportGraphToJson(edges: List<DependencyEdge>, path: String) {
         log("exporting graph to $path")
 
         val jsonEdges = edges.map { e ->
             JsonDependencyEdge(
-                e.sourceElement.containingFile.virtualFile.presentableName,
-                e.destinationElement.containingFile.virtualFile.presentableName
+                getProjectPath(e.sourceElement),
+                getProjectPath(e.destinationElement)
             )
         }
 
