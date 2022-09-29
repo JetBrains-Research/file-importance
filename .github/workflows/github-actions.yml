@@ -40,4 +40,4 @@ jobs:
 
     - name: Check errors
       working-directory: ./DependencyGraphAnalysis
-      run: pylint -E ./code
+      run: pylint -E ./src
