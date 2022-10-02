@@ -3,7 +3,7 @@
 set -e
 
 if [ $# -ne "2" ]; then
-  echo "usage: run <dependency level> <path to project> <repository full name>"
+  echo "usage: run <dependency level> <path to project>"
   exit 1
 fi
 
@@ -32,6 +32,7 @@ pip3 install -r requirements.txt
 python3 ./src/DependencyGraphEvaluator.py "$graphFilePath" "$graphImagePath" "$featuresFilePath"
 
 cd "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/scripts";
+./linguist_script.sh "$projectPath"
 ./commit_log_script.sh "$projectPath"
 cd ..
 mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath Null $featuresFilePath"

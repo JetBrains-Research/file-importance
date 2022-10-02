@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 import random
 import sys
 import pandas as pd
+import time
 
 measures = [
     (nx.pagerank, "pageRank"),
@@ -13,8 +14,8 @@ measures = [
     (nx.in_degree_centrality, "inDegreeCentrality"),
     (nx.out_degree_centrality, "outDegreeCentrality"),
     (nx.betweenness_centrality, "betweennessCentrality"),
-    (nx.eigenvector_centrality, "eigenvectorCentrality"),
-    (nx.katz_centrality, "katzCentrality")
+    # (nx.eigenvector_centrality, "eigenvectorCentrality"),
+    # (nx.katz_centrality, "katzCentrality")
 ]
 
 
@@ -91,7 +92,10 @@ if output_features_path is None:
     exit(1122)
 
 graph = load_graph(graph_file_path)
+
+t = time.time()
 features, feature_names = create_feature_vector(graph)
+log(f"feature extraction time is {time.time() - t}")
 # color_map = cluster_nodes(features)
 #
 # nx.draw(graph, node_color=color_map, with_labels=True)
