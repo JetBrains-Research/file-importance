@@ -18,7 +18,7 @@ mkdir "$outputFolderName"
 
 outputFolderPath="$ROOT_DIRRECTORY/$outputFolderName"
 
-graphFilePath="$outputFolderPath/graph.json"
+graphFilePath="$outputFolderPath/graph.csv"
 infoFilePath="$outputFolderPath/info.json"
 graphImagePath="$outputFolderPath/graph.png"
 featuresFilePath="$outputFolderPath/features.csv"

@@ -31,13 +31,8 @@ def load_graph(path):
     log(f"Loading graph from {path}")
     results = []
     with open(path) as f:
-        jsonData = json.load(f)
-        for jsonEdge in jsonData:
-            results += [(jsonEdge['source'], jsonEdge['destination'])]
-
-    graph = nx.DiGraph()
-    graph.add_edges_from(results)
-    return graph
+        data_frame = pd.read_csv(f)
+        return nx.from_pandas_edgelist(data_frame, source="source", target="destination", create_using=nx.DiGraph())
 
 
 def create_feature_vector(graph):
