@@ -8,16 +8,15 @@ import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.searches.ReferencesSearch
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToStream
-import java.io.File
+import org.jetbrains.kotlin.idea.base.utils.fqname.getKotlinFqName
+import org.jetbrains.research.ictl.csv.CSVFormat
 import kotlin.system.exitProcess
 
 class IdeRunner : ApplicationStarter {
 
-    private var ROOT_PATH = ""
-
     override fun getCommandName(): String = "mine-dependencies"
+
+    @OptIn(ExperimentalSerializationApi::class)
     override fun main(args: MutableList<String>) {
         log(
             "\n    ____                            __                         __  ____                \n" +
@@ -30,13 +29,13 @@ class IdeRunner : ApplicationStarter {
 
         val (dependencyType, projectPath, graphFile, infoFile) = Args.parse(args)
 
-        ROOT_PATH = projectPath.toString()
-
         val project = ProjectUtil.openOrImport(projectPath)
         if (project == null) {
             log("Could not open the project $projectPath")
             exitProcess(1)
         }
+
+        log("Indexing project ${project.name}")
 
         val dumbService = project.getService(DumbService::class.java)
         if (dumbService == null) {
@@ -44,112 +43,107 @@ class IdeRunner : ApplicationStarter {
             exitProcess(1)
         }
 
+        val dependencyPsiClass = when (dependencyType) {
+            DependencyType.CLASS -> PsiClass::class.java
+            DependencyType.METHOD -> PsiMethod::class.java
+        }
+
         dumbService.runWhenSmart {
             log("Indexing has finished")
 
-            val psiFiles = getAllRelatedFiles(project)
+            val classesWriter = infoFile.bufferedWriter()
+            val edgesWriter = graphFile.bufferedWriter()
+            var nothingWritten = true
 
-            val elements = getAllRelatedElements(psiFiles, dependencyType)
-            exportClasses(elements, infoFile)
-
-            val edges = buildDependencyGraph(elements)
-            writeToJson(edges, graphFile)
+            getAllJavaPsiFiles(project)
+                .getAllPsiElements(dependencyPsiClass)
+                .onEachIndexed { index, psiElement ->
+                    psiElement.toFileInformation()?.let {
+                        classesWriter.append(
+                            CSVFormat.encodeToString(
+                                it,
+                                nothingWritten // index == 0
+                            )
+                        )
+                        nothingWritten = false
+                    }
+                    if (index % 1000 == 0) {
+                        log("Written $index elements")
+                    }
+                }
+                .buildDependencyEdges()
+                .forEachIndexed { index, dependencyEdge ->
+                    edgesWriter.append(CSVFormat.encodeToString(dependencyEdge, index == 0))
+                    if (index % 1000 == 0) {
+                        log("Written $index edges")
+                    }
+                }
 
             exitProcess(0)
         }
     }
 
-    private fun PsiElement.toClass() = when (this) {
-        is PsiClass -> this
-        is PsiMethod -> this.containingClass
-        else -> {
-            log("Unrecognized PsiElement")
-            null
-            // Why not `this.getContainingClass()`?
-        }
-    }
-
-    private fun exportClasses(elements: List<PsiElement>, infoFile: File) {
-        log("Exporting class information tp ${infoFile.absolutePath}")
-
-        val result = elements
-            .mapNotNull { it.toClass() }
-            .map { psiClass ->
-                FileInformation(
-                    psiClass.qualifiedName ?: "Some Local/Anonymous class",
-                    psiClass.containingFile.virtualFile.presentableName
-                )
-            }
-
-        writeToJson(result, infoFile)
-    }
-
-    private fun PsiElement.getFileName() = containingFile.virtualFile.path.replace("$ROOT_PATH/", "")
-
-    private fun buildDependencyGraph(elements: List<PsiElement>): List<DependencyEdge> {
-        var lastCheckpoint = 0 // DEBUG
-        var currSize = 0 // DEBUG
-        log("Building a graph for ${elements.size} elements")
-
-        return elements.flatMap { psiElement ->
-            ReferencesSearch
-                .search(psiElement)
-                .map { psiReference ->
-                    DependencyEdge(psiReference.element.getFileName(), psiElement.getFileName())
-                }.also {
-                    currSize += it.size
-                    if (currSize - lastCheckpoint > 1000) {
-                        lastCheckpoint = currSize
-                        log("Build $lastCheckpoint edges so far")
-                    }
-                }
-        }
-    }
-
-    private fun getAllRelatedElements(psiFiles: List<PsiFile?>, dependencyType: DependencyType): List<PsiElement> {
-        val clazz = when (dependencyType) {
-            DependencyType.CLASS -> PsiClass::class.java
-            DependencyType.METHOD -> PsiMethod::class.java
-        }
-
-        return getAllPsiElements(psiFiles, clazz)
-    }
-
-    private fun getAllRelatedFiles(project: Project): List<PsiFile?> {
-        log("Getting All related files")
-
-        val files = FilenameIndex.getAllFilesByExt(project, "java")
+    private fun getAllJavaPsiFiles(project: Project) = sequence<PsiFile> {
+        log("getAllJavaPsiFiles")
         val psiManager = PsiManager.getInstance(project)
 
-        return files.mapNotNull { f -> psiManager.findFile(f) }
+        FilenameIndex.getAllFilesByExt(project, "java").forEach {
+            val file = psiManager.findFile(it)
+            // yieldNotNull does causes java.lang.ClassNotFoundException: org.jetbrains.kotlin.utils.CollectionsKt
+            if (file != null) {
+                yield(file)
+            }
+        }
     }
 
-    private fun <T> getAllPsiElements(psiFiles: List<PsiFile?>, clazz: Class<T>): List<PsiElement> {
-        log("Getting All related elements")
-        val elements = mutableListOf<PsiElement>()
-        psiFiles.forEach {
-            it?.acceptChildren(object : JavaRecursiveElementVisitor() {
+    private fun PsiElement.toPsiClass() = when (this) {
+        is PsiClass -> this
+        is PsiMethod -> this.containingClass
+        else -> error("Unrecognized PsiElement: ${this.getKotlinFqName()}")
+    }
+
+    private fun PsiElement.toFileInformation() = toPsiClass()?.let {
+        FileInformation(
+            // TODO: suspicious, too many local/anonymous
+            it.qualifiedName ?: anonymousName,
+            it.containingFile.virtualFile.presentableName
+        )
+    }
+
+    private fun PsiElement.getFileName() = containingFile.virtualFile.presentableName
+
+    private fun Sequence<PsiElement>.buildDependencyEdges() =
+        flatMap { psiElement ->
+            ReferencesSearch
+                .search(psiElement)
+                .asSequence()
+                .filterNot {
+                    it.element.containingFile.isEquivalentTo(psiElement.containingFile)
+                }
+                .map {
+                    DependencyEdge(it.element.getFileName(), psiElement.getFileName())
+                }
+        }
+
+    private fun <T> Sequence<PsiFile>.getAllPsiElements(dependencyPsiClass: Class<T>) =
+        flatMap { psiFile ->
+            val elements = mutableListOf<PsiElement>()
+            psiFile.acceptChildren(object : JavaRecursiveElementVisitor() {
                 override fun visitElement(element: PsiElement) {
-                    if (clazz.isAssignableFrom(element::class.java)) {
+                    if (dependencyPsiClass.isAssignableFrom(element::class.java)) {
                         elements.add(element)
                     }
 
                     super.visitElement(element)
                 }
             })
+            elements
         }
-        return elements
-    }
 
     companion object {
-        @OptIn(ExperimentalSerializationApi::class)
-        inline fun <reified T> writeToJson(what: T, file: File) = try {
-            Json.encodeToStream(what, file.outputStream())
-        } catch (e: Exception) {
-            log(e.stackTraceToString())
-        }
+        const val anonymousName = "Some Local/Anonymous class"
 
-        fun log(log: String) {
+        inline fun <reified T> log(log: T) {
             println("****Miner**** $log")
         }
     }
