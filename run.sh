@@ -22,9 +22,11 @@ graphFilePath="$outputFolderPath/graph.csv"
 infoFilePath="$outputFolderPath/info.json"
 graphImagePath="$outputFolderPath/graph.png"
 featuresFilePath="$outputFolderPath/features.csv"
+targetDirectoriesPath="$outputFolderPath/targets.txt"
 
 
-"./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pdeplevel="$1" -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Pinfopath="$infoFilePath"
+
+"./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pdeplevel="$1" -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Pinfopath="$infoFilePath" -Ptargetdirectories="$targetDirectoriesPath"
 
 
 cd "$graphAnalyzer"
@@ -35,7 +37,7 @@ cd "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/scripts";
 ./linguist_script.sh "$projectPath"
 ./commit_log_script.sh "$projectPath"
 cd ..
-mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath Null $featuresFilePath"
+mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath $featuresFilePath $targetDirectoriesPath"
 
 
 

@@ -4,12 +4,14 @@ import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationStarter
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
 import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.searches.ReferencesSearch
 import kotlinx.serialization.ExperimentalSerializationApi
 import org.jetbrains.kotlin.idea.base.utils.fqname.getKotlinFqName
 import org.jetbrains.research.ictl.csv.CSVFormat
+import java.io.File
 import kotlin.system.exitProcess
 
 class IdeRunner : ApplicationStarter {
@@ -27,7 +29,7 @@ class IdeRunner : ApplicationStarter {
                     "          /_/                                     /____/                               "
         )
 
-        val (dependencyType, projectPath, graphFile, infoFile) = Args.parse(args)
+        val (dependencyType, projectPath, graphFile, infoFile, targetDirectories) = Args.parse(args)
 
         val project = ProjectUtil.openOrImport(projectPath)
         if (project == null) {
@@ -55,6 +57,8 @@ class IdeRunner : ApplicationStarter {
             val edgesWriter = graphFile.bufferedWriter()
             var nothingWritten = true
 
+            exportTargetDirectories(project, targetDirectories)
+
             getAllJavaPsiFiles(project)
                 .getAllPsiElements(dependencyPsiClass)
                 .onEachIndexed { index, psiElement ->
@@ -79,8 +83,39 @@ class IdeRunner : ApplicationStarter {
                     }
                 }
 
+
             exitProcess(0)
         }
+    }
+
+    private fun exportTargetDirectories(project: Project, targetDirectories: File) {
+        log("exporting target path")
+
+        val projectDir = project.guessProjectDir()
+        if (projectDir == null){
+            log("Can not find root project dir")
+            return
+        }
+
+        val projectPrefix = "${projectDir.path}/"
+        val lookupList = mutableListOf(projectDir)
+        val directories = mutableListOf<String>()
+        while (lookupList.isNotEmpty()) {
+            val file = lookupList.last()
+            lookupList.remove(file)
+            if (file.isDirectory) {
+                directories.add(file.path.replace(projectPrefix, ""))
+                if (file.children != null) {
+                    lookupList.addAll(file.children)
+                }
+            }
+        }
+
+        log("writing ${directories.size} target directories")
+        val writer = targetDirectories.bufferedWriter()
+        directories.forEach{writer.appendLine(it)}
+        writer.flush()
+        writer.close()
     }
 
     private fun getAllJavaPsiFiles(project: Project) = sequence<PsiFile> {

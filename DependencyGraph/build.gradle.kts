@@ -3,8 +3,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("java")
     id("org.jetbrains.intellij") version "1.9.0"
-    kotlin("jvm") version "1.7.10"
-    kotlin("plugin.serialization") version "1.7.10"
+    kotlin("jvm") version "1.7.20"
+    kotlin("plugin.serialization") version "1.7.20"
     application
 }
 
@@ -51,7 +51,8 @@ tasks {
         val projectpath: String? by project
         val graphpath: String? by project
         val infopath: String? by project
-        args = listOfNotNull("mine-dependencies", deplevel, projectpath, graphpath, infopath)
+        val targetdirectories: String? by project
+        args = listOfNotNull("mine-dependencies", deplevel, projectpath, graphpath, infopath, targetdirectories)
         jvmArgs = listOf("-Xmx8g", "-Djava.awt.headless=true")
     }
 

@@ -7,7 +7,13 @@ import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
-data class Args(val dependencyType: DependencyType, val projectPath: Path, val graphFile: File, val infoFile: File) {
+data class Args(
+    val dependencyType: DependencyType,
+    val projectPath: Path,
+    val graphFile: File,
+    val infoFile: File,
+    val targetDirectories: File
+) {
     companion object {
         fun parse(args: List<String>): Args {
             val dependencyType = try {
@@ -35,7 +41,13 @@ data class Args(val dependencyType: DependencyType, val projectPath: Path, val g
                 exitProcess(1)
             }
 
-            return Args(dependencyType, projectPath, graphFile, infoFile)
+            val targetDirectories = File(args[5])
+            if (!targetDirectories.exists() && !targetDirectories.createNewFile()) {
+                IdeRunner.log("Could not create ${targetDirectories.path} does not exist")
+                exitProcess(1)
+            }
+
+            return Args(dependencyType, projectPath, graphFile, infoFile, targetDirectories)
         }
     }
 }
