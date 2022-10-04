@@ -9,6 +9,7 @@ import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.searches.ReferencesSearch
 import kotlinx.serialization.ExperimentalSerializationApi
+import org.jetbrains.kotlin.backend.common.pop
 import org.jetbrains.kotlin.idea.base.utils.fqname.getKotlinFqName
 import org.jetbrains.research.ictl.csv.CSVFormat
 import java.io.File
@@ -101,8 +102,9 @@ class IdeRunner : ApplicationStarter {
         val lookupList = mutableListOf(projectDir)
         val directories = mutableListOf<String>()
         while (lookupList.isNotEmpty()) {
-            val file = lookupList.last()
-            lookupList.remove(file)
+//            val file = lookupList.last()
+//            lookupList.remove(file)
+            val file = lookupList.pop()
             if (file.isDirectory) {
                 directories.add(file.path.replace(projectPrefix, ""))
                 if (file.children != null) {
