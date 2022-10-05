@@ -5,16 +5,20 @@ import com.intellij.openapi.application.ApplicationStarter
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.searches.ReferencesSearch
 import kotlinx.serialization.ExperimentalSerializationApi
-import org.jetbrains.kotlin.idea.base.utils.fqname.getKotlinFqName
 import org.jetbrains.research.ictl.csv.CSVFormat
 import java.io.File
 import kotlin.system.exitProcess
 
+private const val s = ""
+
 class IdeRunner : ApplicationStarter {
+
+    private lateinit var ARGS: Args
 
     override fun getCommandName(): String = "mine-dependencies"
 
@@ -29,7 +33,8 @@ class IdeRunner : ApplicationStarter {
                     "          /_/                                     /____/                               "
         )
 
-        val (dependencyType, projectPath, graphFile, infoFile, targetDirectories) = Args.parse(args)
+        ARGS = Args.parse(args)
+        val (dependencyType, projectPath, graphFile, infoFile, targetDirectories) = ARGS
 
         val project = ProjectUtil.openOrImport(projectPath)
         if (project == null) {
@@ -53,7 +58,6 @@ class IdeRunner : ApplicationStarter {
         dumbService.runWhenSmart {
             log("Indexing has finished")
 
-            val classesWriter = infoFile.bufferedWriter()
             val edgesWriter = graphFile.bufferedWriter()
             var nothingWritten = true
 
@@ -61,20 +65,6 @@ class IdeRunner : ApplicationStarter {
 
             getAllJavaPsiFiles(project)
                 .getAllPsiElements(dependencyPsiClass)
-                .onEachIndexed { index, psiElement ->
-                    psiElement.toFileInformation()?.let {
-                        classesWriter.append(
-                            CSVFormat.encodeToString(
-                                it,
-                                nothingWritten // index == 0
-                            )
-                        )
-                        nothingWritten = false
-                    }
-                    if (index % 1000 == 0) {
-                        log("Written $index elements")
-                    }
-                }
                 .buildDependencyEdges()
                 .forEachIndexed { index, dependencyEdge ->
                     edgesWriter.append(CSVFormat.encodeToString(dependencyEdge, index == 0))
@@ -92,30 +82,57 @@ class IdeRunner : ApplicationStarter {
         log("exporting target path")
 
         val projectDir = project.guessProjectDir()
-        if (projectDir == null){
+        if (projectDir == null) {
             log("Can not find root project dir")
             return
         }
 
-        val projectPrefix = "${projectDir.path}/"
-        val lookupList = mutableListOf(projectDir)
-        val directories = mutableListOf<String>()
+        val directories = HashMap<String, Long>()
+        val rootDirectory = ""
+        directories[rootDirectory] = 0
+
+        // Finding the directories of intrest
+        val lookupList = projectDir.children.toMutableList()
         while (lookupList.isNotEmpty()) {
             val file = lookupList.last()
             lookupList.remove(file)
             if (file.isDirectory) {
-                directories.add(file.path.replace(projectPrefix, ""))
+                // Check if the directory only contains another directory
+                if (file.children.size != 1 || !file.children[0].isDirectory) {
+                    directories[file.getFileName()] = 0
+                }
+
                 if (file.children != null) {
                     lookupList.addAll(file.children)
                 }
             }
         }
 
-        log("writing ${directories.size} target directories")
-        val writer = targetDirectories.bufferedWriter()
-        directories.forEach{writer.appendLine(it)}
-        writer.flush()
-        writer.close()
+        // Find out number of characters in java files under any directory of interest
+        for (file in getAllJavaPsiFiles(project)) {
+            val count = file.textLength
+            var parentPath = file.virtualFile.getFileName()
+            while (parentPath.contains("/")){
+                parentPath = parentPath.substring(0, parentPath.lastIndexOf("/"))
+                if (directories.containsKey(parentPath)) {
+                    directories[parentPath] = directories[parentPath]!! + count
+                }
+            }
+
+            directories[rootDirectory] = directories[rootDirectory]!! + count
+        }
+
+        log("writing target directories")
+        targetDirectories.bufferedWriter().use { writer ->
+
+            // Select top 5% directories
+            directories
+                .toList()
+                .sortedByDescending { it.second }
+                .take(directories.size/20)
+                .map { it.first }
+                .forEach { writer.appendLine(it) }
+        }
     }
 
     private fun getAllJavaPsiFiles(project: Project) = sequence<PsiFile> {
@@ -131,21 +148,8 @@ class IdeRunner : ApplicationStarter {
         }
     }
 
-    private fun PsiElement.toPsiClass() = when (this) {
-        is PsiClass -> this
-        is PsiMethod -> this.containingClass
-        else -> error("Unrecognized PsiElement: ${this.getKotlinFqName()}")
-    }
-
-    private fun PsiElement.toFileInformation() = toPsiClass()?.let {
-        FileInformation(
-            // TODO: suspicious, too many local/anonymous
-            it.qualifiedName ?: anonymousName,
-            it.containingFile.virtualFile.presentableName
-        )
-    }
-
-    private fun PsiElement.getFileName() = containingFile.virtualFile.presentableName
+    private fun PsiElement.getFileName() = containingFile.virtualFile.getFileName()
+    private fun VirtualFile.getFileName() = path.replace("${ARGS.projectPath.toString()}/", "")
 
     private fun Sequence<PsiElement>.buildDependencyEdges() =
         flatMap { psiElement ->

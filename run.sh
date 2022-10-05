@@ -23,21 +23,29 @@ infoFilePath="$outputFolderPath/info.json"
 graphImagePath="$outputFolderPath/graph.png"
 featuresFilePath="$outputFolderPath/features.csv"
 targetDirectoriesPath="$outputFolderPath/targets.txt"
+resultsPath="$outputFolderPath/results.xlsx"
+allDevelopersPath="$outputFolderPath/allDev.txt"
+developerAliasesPath="$outputFolderPath/devAlias.txt"
 
 
 
 "./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pdeplevel="$1" -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Pinfopath="$infoFilePath" -Ptargetdirectories="$targetDirectoriesPath"
 
+cd "$projectPath"
+git log --pretty="%an;%ae" | sort | uniq > "$allDevelopersPath"
 
-cd "$graphAnalyzer"
+cd "$ROOT_DIRRECTORY/$graphAnalyzer"
 pip3 install -r requirements.txt
 python3 ./src/DependencyGraphEvaluator.py "$graphFilePath" "$graphImagePath" "$featuresFilePath"
+python3 ./src/DeveloperIdentifier.py "$allDevelopersPath" "$developerAliasesPath"
+rm -f "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/repo_info/alias.txt"
+cp "$developerAliasesPath" "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/repo_info/alias.txt"
 
 cd "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/scripts";
 ./linguist_script.sh "$projectPath"
 ./commit_log_script.sh "$projectPath"
 cd ..
-mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath $featuresFilePath $targetDirectoriesPath"
+mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath $featuresFilePath $targetDirectoriesPath $resultsPath"
 
 
 
