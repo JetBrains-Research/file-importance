@@ -9,7 +9,6 @@ import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.searches.ReferencesSearch
 import kotlinx.serialization.ExperimentalSerializationApi
-import org.jetbrains.kotlin.backend.common.pop
 import org.jetbrains.kotlin.idea.base.utils.fqname.getKotlinFqName
 import org.jetbrains.research.ictl.csv.CSVFormat
 import java.io.File
@@ -93,7 +92,7 @@ class IdeRunner : ApplicationStarter {
         log("exporting target path")
 
         val projectDir = project.guessProjectDir()
-        if (projectDir == null){
+        if (projectDir == null) {
             log("Can not find root project dir")
             return
         }
@@ -102,9 +101,7 @@ class IdeRunner : ApplicationStarter {
         val lookupList = mutableListOf(projectDir)
         val directories = mutableListOf<String>()
         while (lookupList.isNotEmpty()) {
-//            val file = lookupList.last()
-//            lookupList.remove(file)
-            val file = lookupList.pop()
+            val file = lookupList.removeLast() // works the same way the pop() does
             if (file.isDirectory) {
                 directories.add(file.path.replace(projectPrefix, ""))
                 if (file.children != null) {
@@ -115,7 +112,7 @@ class IdeRunner : ApplicationStarter {
 
         log("writing ${directories.size} target directories")
         val writer = targetDirectories.bufferedWriter()
-        directories.forEach{writer.appendLine(it)}
+        directories.forEach { writer.appendLine(it) }
         writer.flush()
         writer.close()
     }
