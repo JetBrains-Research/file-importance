@@ -7,6 +7,7 @@ import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
+// TODO: switch to proper args parser or write it
 data class Args(
     val dependencyType: DependencyType,
     val projectPath: Path,
@@ -15,7 +16,11 @@ data class Args(
     val targetDirectories: File
 ) {
     companion object {
+        private const val argsCount = 6 // name + 5
+
         fun parse(args: List<String>): Args {
+            require(args.size == argsCount) { "Expecting $argsCount arguments, got ${args.size} instead" }
+
             val dependencyType = try {
                 DependencyType.valueOf(args[1])
             } catch (e: IllegalArgumentException) {
@@ -24,28 +29,16 @@ data class Args(
             }
 
             val projectPath = Path(args[2])
-            if (!projectPath.exists()) {
-                IdeRunner.log("Path $projectPath does not exist")
-                exitProcess(1)
-            }
+            require(projectPath.exists()) { "Path $projectPath does not exist" }
 
             val graphFile = Paths.get(args[3]).toFile()
-            if (!graphFile.exists() && !graphFile.createNewFile()) {
-                IdeRunner.log("Could not create ${graphFile.path} does not exist")
-                exitProcess(1)
-            }
+            require(graphFile.exists() || graphFile.createNewFile()) { "Could not create ${graphFile.path}" }
 
             val infoFile = File(args[4])
-            if (!infoFile.exists() && !infoFile.createNewFile()) {
-                IdeRunner.log("Could not create ${infoFile.path} does not exist")
-                exitProcess(1)
-            }
+            require(infoFile.exists() || infoFile.createNewFile()) { "Could not create ${infoFile.path}" }
 
             val targetDirectories = File(args[5])
-            if (!targetDirectories.exists() && !targetDirectories.createNewFile()) {
-                IdeRunner.log("Could not create ${targetDirectories.path} does not exist")
-                exitProcess(1)
-            }
+            require(targetDirectories.exists() || targetDirectories.createNewFile()) { "Could not create ${targetDirectories.path}" }
 
             return Args(dependencyType, projectPath, graphFile, infoFile, targetDirectories)
         }
