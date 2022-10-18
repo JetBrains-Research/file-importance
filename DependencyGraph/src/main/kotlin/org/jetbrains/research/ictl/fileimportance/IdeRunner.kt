@@ -1,5 +1,7 @@
 package org.jetbrains.research.ictl.fileimportance
 
+import com.google.gson.Gson
+import com.intellij.find.FindManager
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationStarter
 import com.intellij.openapi.project.DumbService
@@ -8,8 +10,16 @@ import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
+import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.LocalSearchScope
+import com.intellij.psi.search.searches.FunctionalExpressionSearch
+import com.intellij.psi.search.searches.MethodReferencesSearch
 import com.intellij.psi.search.searches.ReferencesSearch
+import com.intellij.usages.UsageTargetProvider
+import com.intellij.usages.UsageTargetUtil
+import com.intellij.usages.UsageToPsiElementProvider
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
 import org.jetbrains.research.ictl.csv.CSVFormat
 import java.io.File
 import kotlin.system.exitProcess
@@ -65,7 +75,7 @@ class IdeRunner : ApplicationStarter {
 
             getAllJavaPsiFiles(project)
                 .getAllPsiElements(dependencyPsiClass)
-                .buildDependencyEdges()
+                .buildDependencyEdges(project)
                 .forEachIndexed { index, dependencyEdge ->
                     edgesWriter.append(CSVFormat.encodeToString(dependencyEdge, index == 0))
                     if (index % 1000 == 0) {
@@ -73,6 +83,7 @@ class IdeRunner : ApplicationStarter {
                     }
                 }
 
+            edgesWriter.close()
 
             exitProcess(0)
         }
@@ -139,10 +150,11 @@ class IdeRunner : ApplicationStarter {
         log("getAllJavaPsiFiles")
         val psiManager = PsiManager.getInstance(project)
 
-        FilenameIndex.getAllFilesByExt(project, "java").forEach {
+        FilenameIndex.getAllFilesByExt(project, "java", GlobalSearchScope.projectScope(project)).forEach {
             val file = psiManager.findFile(it)
             // yieldNotNull does causes java.lang.ClassNotFoundException: org.jetbrains.kotlin.utils.CollectionsKt
             if (file != null) {
+//                log(file.getFileName())
                 yield(file)
             }
         }
@@ -151,26 +163,44 @@ class IdeRunner : ApplicationStarter {
     private fun PsiElement.getFileName() = containingFile.virtualFile.getFileName()
     private fun VirtualFile.getFileName() = path.replace("${ARGS.projectPath.toString()}/", "")
 
-    private fun Sequence<PsiElement>.buildDependencyEdges() =
+    private fun Sequence<PsiElement>.buildDependencyEdges(project: Project) =
         flatMap { psiElement ->
+            FindManager.getInstance(project).findUsages(psiElement)
+//            var targets = UsageTargetUtil.findUsageTargets(psiElement)
+//            targets[0].files?.forEach { log("ref -> ${it.getFileName()}") }
+//            var result = FunctionalExpressionSearch.search(psiElement as PsiMethod)
+//            log(psiElement.text)
+//            var result = MethodReferencesSearch.search(psiElement as PsiMethod, LocalSearchScope(psiElement.containingFile), false)
+//            result.forEach{log("ref -> ${it.element.getFileName()} - ${it.resolve()!!.getFileName()}")}
             ReferencesSearch
-                .search(psiElement)
+                .search(psiElement, GlobalSearchScope.everythingScope(project), false)
                 .asSequence()
                 .filterNot {
+                    log("circle")
                     it.element.containingFile.isEquivalentTo(psiElement.containingFile)
                 }
                 .map {
+                    log("ref")
                     DependencyEdge(it.element.getFileName(), psiElement.getFileName())
                 }
         }
 
     private fun <T> Sequence<PsiFile>.getAllPsiElements(dependencyPsiClass: Class<T>) =
         flatMap { psiFile ->
+
+//            log("Original -> ${psiFile.getFileName()}")
             val elements = mutableListOf<PsiElement>()
             psiFile.acceptChildren(object : JavaRecursiveElementVisitor() {
                 override fun visitElement(element: PsiElement) {
+//                    var elementTypeName = element::class.java.name
+////                    log(elementTypeName)
+//                    if(elementTypeName.toLowerCase().contains("reference")){
+//                        log(elementTypeName)
+//                        log(element.text)
+//                    }
                     if (dependencyPsiClass.isAssignableFrom(element::class.java)) {
                         elements.add(element)
+//                        log(element.text)
                     }
 
                     super.visitElement(element)
