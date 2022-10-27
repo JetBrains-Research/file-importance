@@ -91,12 +91,12 @@ graph = load_graph(graph_file_path)
 t = time.time()
 features, feature_names = create_feature_vector(graph)
 log(f"feature extraction time is {time.time() - t}")
-# color_map = cluster_nodes(features)
-#
-# nx.draw(graph, node_color=color_map, with_labels=True)
-# # plt.show()
-# log(f"Output result diagram to {output_image_path}")
-# plt.savefig(output_image_path)
+color_map = cluster_nodes(features)
+
+nx.draw(graph, node_color=color_map, with_labels=True)
+# plt.show()
+log(f"Output result diagram to {output_image_path}")
+plt.savefig(output_image_path)
 
 log(f"Output features to {output_features_path}")
 df = pd.DataFrame(features, columns=feature_names, index=list(graph.nodes))
