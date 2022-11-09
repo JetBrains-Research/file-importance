@@ -12,6 +12,7 @@ projectPath="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 graphMiner="DependencyGraph"
 graphAnalyzer="DependencyGraphAnalysis"
 BFCalculator="Truck-Factor"
+jetbrainsBFCalculator="risky-patterns-idea"
 outputFolderName="output"
 rm -rf "$outputFolderName" 
 mkdir "$outputFolderName"
@@ -25,6 +26,7 @@ targetDirectoriesPath="$outputFolderPath/targets.txt"
 resultsPath="$outputFolderPath/results.xlsx"
 allDevelopersPath="$outputFolderPath/allDev.txt"
 developerAliasesPath="$outputFolderPath/devAlias.txt"
+jetbrainsBFResult="$outputFolderPath/jetbrainsBFResults.json"
 
 
 
@@ -45,6 +47,12 @@ cd "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/scripts";
 ./commit_log_script.sh "$projectPath"
 cd ..
 mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath $featuresFilePath $targetDirectoriesPath $resultsPath"
+
+
+# Jetbrains BF Calculation
+cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
+"./gradlew" sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath"
+
 
 
 
