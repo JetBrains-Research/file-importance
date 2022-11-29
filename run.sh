@@ -27,6 +27,7 @@ resultsPath="$outputFolderPath/results.xlsx"
 allDevelopersPath="$outputFolderPath/allDev.txt"
 developerAliasesPath="$outputFolderPath/devAlias.txt"
 jetbrainsBFResult="$outputFolderPath/jetbrainsBFResults.json"
+avelinoBFResult="$outputFolderPath/avelinoBFResults.json"
 
 
 
@@ -46,7 +47,7 @@ cd "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/scripts";
 ./linguist_script.sh "$projectPath"
 ./commit_log_script.sh "$projectPath"
 cd ..
-mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath $featuresFilePath $targetDirectoriesPath $resultsPath"
+mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath $featuresFilePath $targetDirectoriesPath $avelinoBFResult"
 
 
 # Jetbrains BF Calculation
@@ -54,5 +55,6 @@ cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
 "./gradlew" sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath"
 
 
-
+cd "$ROOT_DIRRECTORY/$graphAnalyzer"
+python3 ./src/OutputEvaluation.py "$resultsPath" "$avelinoBFResult" "$jetbrainsBFResult"
 

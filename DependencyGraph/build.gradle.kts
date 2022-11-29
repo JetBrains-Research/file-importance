@@ -52,7 +52,7 @@ tasks {
         val graphpath: String? by project
         val targetdirectories: String? by project
         args = listOfNotNull("mine-dependencies", deplevel, projectpath, graphpath, targetdirectories)
-        jvmArgs = listOf("-Xmx8g", "-Djava.awt.headless=true")
+        jvmArgs = listOf("-Xmx12g", "-Djava.awt.headless=true")
 //        jvmArgs = listOf("-Xmx8g")
     }
 
