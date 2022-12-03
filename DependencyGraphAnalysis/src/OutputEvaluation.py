@@ -94,19 +94,20 @@ def create_output_file(data, output_file):
         'font_color': 'white'})
 
     worksheet.write(0, 0, "Path", header_format)
-    worksheet.write(0, 1, "Significance Indicator", header_format)
-    worksheet.write(0, 2, "Truck Factor", header_format)
-    worksheet.write(0, 3, "Remaining Coverage", header_format)
-    worksheet.write(0, 4, "Total File Count", header_format)
-    worksheet.merge_range(0, 5, 0, 10, "Developers", header_format)
+    worksheet.write(0, 1, "Disagreement", header_format)
+    worksheet.write(0, 2, "Significance Indicator", header_format)
+    worksheet.write(0, 3, "Truck Factor", header_format)
+    worksheet.write(0, 4, "Remaining Coverage", header_format)
+    worksheet.write(0, 5, "Total File Count", header_format)
+    worksheet.merge_range(0, 6, 0, 9, "Developers", header_format)
 
-    worksheet.merge_range(1, 0, 1, 4, "", header_format)
-    worksheet.write(1, 5, "Name", header_format)
-    worksheet.write(1, 6, "email", header_format)
-    worksheet.write(1, 7, "Number of authored Files", header_format)
-    worksheet.write(1, 8, "Authorship Coverage", header_format)
-    worksheet.write(1, 9, "Number of DOA Files", header_format)
-    worksheet.write(1, 10, "DOA Coverage", header_format)
+    worksheet.merge_range(1, 0, 1, 5, "", header_format)
+    worksheet.write(1, 6, "Name", header_format)
+    worksheet.write(1, 7, "email", header_format)
+    worksheet.write(1, 8, "Number of Major Files", header_format)
+    worksheet.write(1, 9, "Major Coverage", header_format)
+
+    totalIndicatorsCount = len(data[0]["info"])
 
     row = 2
     for d in data:
@@ -114,29 +115,47 @@ def create_output_file(data, output_file):
         for i in d["info"]:
             indicator_row = row
             for developer in i["developers"]:
-                worksheet.write(row, 5, developer["name"], left_text_format)
-                worksheet.write(row, 6, developer["email"], left_text_format)
-                worksheet.write(row, 7, developer["numberOfAuthoredFiles"], centered_text)
-                worksheet.write(row, 8, "%.2f" % developer["authorshipCoverage"], centered_text)
-                worksheet.write(row, 9, developer["numberOfDOAFiles"], centered_text)
-                worksheet.write(row, 10, "%.2f" % developer["doaAuthorshipCoverage"], centered_text)
+                developer_name = developer["name"]
+                if developer_name == "":
+                    developer_name = "NA"
+
+                worksheet.write(row, 6, developer_name, left_text_format)
+                worksheet.write(row, 7, developer["email"], left_text_format)
+                worksheet.write(row, 8, developer["numberOfDOAFiles"], centered_text)
+                worksheet.write(row, 9, "%.2f" % developer["doaAuthorshipCoverage"], centered_text)
                 row += 1
 
             if indicator_row == row:
                 row += 1
 
             if row - indicator_row > 1:
-                worksheet.merge_range(indicator_row, 1, row - 1, 1, i["significanceIndicator"], left_text_format)
-                worksheet.merge_range(indicator_row, 2, row - 1, 2, i["busFactor"], centered_text)
-                worksheet.merge_range(indicator_row, 3, row - 1, 3, "%.2f" % i["coverage"], centered_text)
-                worksheet.merge_range(indicator_row, 4, row - 1, 4, i["totalFiles"], centered_text)
+                worksheet.merge_range(indicator_row, 2, row - 1, 2, i["significanceIndicator"], left_text_format)
+                worksheet.merge_range(indicator_row, 3, row - 1, 3, i["busFactor"], centered_text)
+                worksheet.merge_range(indicator_row, 4, row - 1, 4, "%.2f" % i["coverage"], centered_text)
+                worksheet.merge_range(indicator_row, 5, row - 1, 5, i["totalFiles"], centered_text)
             else:
-                worksheet.write(row - 1, 1, i["significanceIndicator"], left_text_format)
-                worksheet.write(row - 1, 2, i["busFactor"], centered_text)
-                worksheet.write(row - 1, 3, "%.2f" % i["coverage"], centered_text)
-                worksheet.write(row - 1, 4, i["totalFiles"], centered_text)
+                worksheet.write(row - 1, 2, i["significanceIndicator"], left_text_format)
+                worksheet.write(row - 1, 3, i["busFactor"], centered_text)
+                worksheet.write(row - 1, 4, "%.2f" % i["coverage"], centered_text)
+                worksheet.write(row - 1, 5, i["totalFiles"], centered_text)
 
-        worksheet.merge_range(path_row, 0, row - 1, 0, d["path"], left_text_format)
+        disagreement = len(set([i["busFactor"] for i in d["info"]])) / totalIndicatorsCount
+        disagreementColor = hex(200 - int(disagreement * 128))[2:]
+        color = f'#FF{disagreementColor}{disagreementColor}'
+
+        path_value = d["path"]
+        if path_value == "":
+            path_value = "root"
+
+        worksheet.merge_range(path_row, 0, row - 1, 0, path_value,
+                              workbook.add_format({
+                                  'align': 'left',
+                                  'valign': 'vcenter',
+                                  'bg_color': color,
+                                  'font_size': 10}
+                              ))
+
+        worksheet.merge_range(path_row, 1, row - 1, 1, "%.2f" % disagreement, centered_text)
 
     workbook.close()
 

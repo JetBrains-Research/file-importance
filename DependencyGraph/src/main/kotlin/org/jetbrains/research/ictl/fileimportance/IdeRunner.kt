@@ -55,17 +55,20 @@ class IdeRunner : ApplicationStarter {
         val edgesWriter = ARGS.graphFile.bufferedWriter()
 
         exportTargetDirectories(targetExtractor)
+        var header = true
         dependencyExtractors.forEachIndexed { extractorIndex, extractor ->
             extractor
                 .extractEdges()
                 .forEachIndexed { index, dependencyEdge ->
-                    edgesWriter.append(CSVFormat.encodeToString(dependencyEdge, index == 0 && extractorIndex == 0))
+                    edgesWriter.append(CSVFormat.encodeToString(dependencyEdge, header))
+                    header = false
                     if (index % 1000 == 0) {
                         log("Written $index edges")
                     }
                 }
         }
 
+        edgesWriter.flush()
         edgesWriter.close()
 
         exitProcess(0)
