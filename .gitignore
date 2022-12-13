@@ -188,3 +188,4 @@ fabric.properties
 .build/
 .gradle/
 **/output/
+**/outputs/
