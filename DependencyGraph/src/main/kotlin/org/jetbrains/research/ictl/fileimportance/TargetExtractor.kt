@@ -52,8 +52,8 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
 
         // Select top 5% directories
         var selectTargetCount = directories.size / 20
-        if (selectTargetCount == 0){
-            selectTargetCount = 5
+        if (selectTargetCount < 50){
+            selectTargetCount = 50
         }
 
         return directories.toList().sortedByDescending { it.second }.take(selectTargetCount).map { it.first }
