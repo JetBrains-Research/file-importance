@@ -14,7 +14,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <appStarter implementation="org.jetbrains.research.ictl.fileimportance.IdeRunner"/>
+        <appStarter implementation="org.jetbrains.research.ictl.fileimportance.ExportDependenciesRunner"/>
     </extensions>
 
     <actions>
