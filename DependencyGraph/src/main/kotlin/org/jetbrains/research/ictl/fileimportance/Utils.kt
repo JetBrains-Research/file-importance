@@ -7,7 +7,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.utils.yieldIfNotNull
 
 object Utils {
     public const val BANNER =
@@ -20,7 +19,7 @@ object Utils {
 }
 
 fun PsiElement.getFileName() = containingFile?.virtualFile?.getFileName() ?: ""
-fun VirtualFile.getFileName() = path.replace("${IdeRunner.ARGS.projectPath.toString()}/", "")
+fun VirtualFile.getFileName() = path.replace("${ExportDependenciesRunner.ARGS.projectPath.toString()}/", "")
 
 inline fun <reified T> log(log: T) {
     println("****Miner**** $log")

@@ -7,19 +7,20 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import org.jetbrains.research.ictl.csv.CSVFormat
+import java.util.*
 import kotlin.system.exitProcess
 
 private const val s = ""
 
-class IdeRunner : ApplicationStarter {
+class ExportDependenciesRunner : ApplicationStarter {
 
-    override fun getCommandName(): String = "mine-dependencies"
+    override fun getCommandName(): String = "extractDependencies"
 
     @OptIn(ExperimentalSerializationApi::class)
     override fun main(args: MutableList<String>) {
         log(Utils.BANNER)
 
-        ARGS = Args.parse(args)
+        ARGS = ExportDependenciesArgs.parse(args)
 
         val project = ProjectUtil.openOrImport(ARGS.projectPath)
         if (project == null) {
@@ -35,9 +36,15 @@ class IdeRunner : ApplicationStarter {
             exitProcess(1)
         }
 
+
         dumbService.runWhenSmart {
             log("Indexing has finished")
-            buildGraph(project)
+            try {
+                buildGraph(project)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                exitProcess(1)
+            }
         }
     }
 
@@ -51,10 +58,12 @@ class IdeRunner : ApplicationStarter {
         )
 
         val targetExtractor = TargetExtractor(project, dependencyExtractors)
+        exportTargetDirectories(targetExtractor)
+
 
         val edgesWriter = ARGS.graphFile.bufferedWriter()
 
-        exportTargetDirectories(targetExtractor)
+        dependencyExtractors.forEach { it.prepare() }
         var header = true
         dependencyExtractors.forEachIndexed { extractorIndex, extractor ->
             extractor
@@ -70,6 +79,25 @@ class IdeRunner : ApplicationStarter {
 
         edgesWriter.flush()
         edgesWriter.close()
+
+//        var path = ARGS.graphFile.absolutePath
+//        path = path.substring(0, path.lastIndexOf("/") + 1)
+//        path += "features.csv"
+//
+//        val edgesWriter = File(path).bufferedWriter()
+//        var header = true
+//        edgesWriter.append(",equal\n")
+//        getPsiFiles(project, "java")
+//            .forEach {
+//                edgesWriter.append(CSVFormat.encodeToString(Features(it.getFileName(), 1.0), false))
+//                header = false
+//            }
+//
+//        getPsiFiles(project, "kt")
+//            .forEach {
+//                edgesWriter.append(CSVFormat.encodeToString(Features(it.getFileName(), 1.0), false))
+//                header = false
+//            }
 
         exitProcess(0)
     }
@@ -87,7 +115,7 @@ class IdeRunner : ApplicationStarter {
 
 
     companion object {
-        lateinit var ARGS: Args
+        lateinit var ARGS: ExportDependenciesArgs
         const val anonymousName = "Some Local/Anonymous class"
     }
 }

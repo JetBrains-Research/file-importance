@@ -7,13 +7,13 @@ import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
-data class Args(
+data class ExportDependenciesArgs(
     val projectPath: Path,
     val graphFile: File,
     val targetDirectories: File
 ) {
     companion object {
-        fun parse(args: List<String>): Args {
+        fun parse(args: List<String>): ExportDependenciesArgs {
 
             val projectPath = Path(args[1])
             if (!projectPath.exists()) {
@@ -33,7 +33,7 @@ data class Args(
                 exitProcess(1)
             }
 
-            return Args(projectPath, graphFile, targetDirectories)
+            return ExportDependenciesArgs(projectPath, graphFile, targetDirectories)
         }
     }
 }
