@@ -141,8 +141,8 @@ def write_authorship_info(workbook, data, authorship_info):
         first_row = row
         sorted_folders = sorted(a["folders"], key=lambda x: x["score"], reverse=True)
         count = len(sorted_folders)
-        if count > 15:
-            count = 15
+        if count > 20:
+            count = 20
         for i in range(count):
             f = sorted_folders[i]
             if len(f["folderPath"]) > longest_path:
