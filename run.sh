@@ -30,8 +30,7 @@ allDevelopersPath="$outputFolderPath/allDev.txt"
 developerAliasesPath="$outputFolderPath/devAlias.txt"
 jetbrainsBFResult="$outputFolderPath/jetbrainsBFResults.json"
 avelinoBFResult="$outputFolderPath/avelinoBFResults.json"
-
-
+authorshipPath="$outputFolderPath/authorships.json"
 
 "./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Ptargetdirectories="$targetDirectoriesPath"
 
@@ -54,9 +53,9 @@ mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$
 
 # Jetbrains BF Calculation
 cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
-"./gradlew" sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath"
+"./gradlew" sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath" -Pauthorship="$authorshipPath"
 
 
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
-python3 ./src/OutputEvaluation.py "$resultsPath" "$avelinoBFResult" "$jetbrainsBFResult"
+python3 ./src/OutputEvaluation.py "$resultsPath" "$authorshipPath" "$avelinoBFResult" "$jetbrainsBFResult"
 
