@@ -17,26 +17,22 @@ class ExportDependenciesRunner : ApplicationStarter {
     override fun main(args: List<String>) {
         log(Utils.BANNER)
 
-        ARGS = ExportDependenciesArgs.parse(args)
+        val exportDependenciesArgs = ExportDependenciesArgs.parse(args)
 
-        val project = ProjectUtil.openOrImport(ARGS.projectPath)
-        project ?: run {
-            log("Could not open the project ${ARGS.projectPath}")
-            exitProcess(1)
+        val project = exitOnNull(ProjectUtil.openOrImport(exportDependenciesArgs.projectPath)) {
+            "Could not open the project ${exportDependenciesArgs.projectPath}"
         }
 
         log("Indexing project ${project.name}")
 
-        val dumbService = project.getService(DumbService::class.java)
-        dumbService ?: run {
-            log("Could not get DumbService")
-            exitProcess(1)
+        val dumbService = exitOnNull(project.getService(DumbService::class.java)) {
+            "Could not get DumbService"
         }
 
         dumbService.runWhenSmart {
             log("Indexing has finished")
             try {
-                buildGraph(project)
+                buildGraph(project, exportDependenciesArgs)
             } catch (e: Exception) {
                 e.printStackTrace()
                 exitProcess(1)
@@ -47,18 +43,19 @@ class ExportDependenciesRunner : ApplicationStarter {
     @OptIn(ExperimentalSerializationApi::class)
     private fun buildGraph(
         project: Project,
+        args: ExportDependenciesArgs
     ) {
         val dependencyExtractors = listOf(
-            JavaDependencyExtractor(project),
-            KotlinDependencyExtractor(project)
+            JavaDependencyExtractor(project, args),
+            KotlinDependencyExtractor(project, args)
         )
 
-        TargetExtractor(project, dependencyExtractors).exportTargetDirectories()
+        TargetExtractor(dependencyExtractors).exportTargetDirectories()
 
         dependencyExtractors.forEach { it.prepare() }
 
         var header = true
-        ARGS.graphFile.bufferedWriter().use { edgesWriter ->
+        args.graphFile.bufferedWriter().use { edgesWriter ->
             dependencyExtractors.forEach { extractor ->
                 extractor
                     .extractEdges()
@@ -70,9 +67,5 @@ class ExportDependenciesRunner : ApplicationStarter {
         }
 
         exitProcess(0)
-    }
-
-    companion object {
-        lateinit var ARGS: ExportDependenciesArgs
     }
 }

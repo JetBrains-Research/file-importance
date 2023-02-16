@@ -1,30 +1,33 @@
 package org.jetbrains.research.ictl.fileimportance
 
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.vfs.VirtualFile
+import java.nio.file.Path
 
-class TargetExtractor(private val project: Project, private val dependencyExtractors: List<DependencyExtractor>) {
+class TargetExtractor(private val dependencyExtractors: List<DependencyExtractor>) {
     fun extract(): List<String>? {
-        log("exporting target path")
+        log("exporting target paths")
 
-        val projectDir = project.guessProjectDir()
-        projectDir ?: run {
+        exitOnFalse(dependencyExtractors.isNotEmpty()) { "No dependency extractors" }
+
+        val projectDir = dependencyExtractors.first().project.guessProjectDir() ?: run {
             log("Can not find root project dir")
             return null
         }
+        val projectPath = dependencyExtractors.first().args.projectPath
 
         val directories = HashMap<String, Long>()
         val rootDirectory = ""
         directories[rootDirectory] = 0
 
-        // Finding the directories of intrest
+        // Find directories of interest
         val lookupList = projectDir.children.toMutableList()
         while (lookupList.isNotEmpty()) {
             val file = lookupList.removeLast()
             if (file.isDirectory) {
                 // Check if the directory only contains another directory
                 if (file.children.size != 1 || !file.children[0].isDirectory) {
-                    directories[file.getFileName()] = 0
+                    directories[file.getFileName(projectPath)] = 0
                 }
 
                 file.children?.let {
@@ -37,7 +40,7 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
         val files = dependencyExtractors.flatMap { it.getAllFiles() }
         for (file in files) {
             val count = file.textLength
-            var parentPath = file.virtualFile.getFileName()
+            var parentPath = file.virtualFile.getFileName(projectPath)
             while (parentPath.contains("/")) {
                 parentPath = parentPath.substring(0, parentPath.lastIndexOf("/"))
                 directories.computeIfPresent(parentPath) { _, prevCount ->
@@ -64,10 +67,12 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
         val targets = extract() ?: return
 
         log("writing target directories")
-        ExportDependenciesRunner.ARGS.targetDirectories
+        dependencyExtractors.first().args.targetDirectories
             .bufferedWriter()
             .use { writer ->
                 targets.forEach { writer.appendLine(it) }
             }
     }
+
+    private fun VirtualFile.getFileName(projectPath: Path) = path.replace("${projectPath}/", "")
 }

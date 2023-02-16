@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.refactoring.suggested.startOffset
 
-class JavaDependencyExtractor(project: Project) : DependencyExtractor(project) {
+class JavaDependencyExtractor(project: Project, args: ExportDependenciesArgs) : DependencyExtractor(project, args) {
     override fun extractEdges(): Sequence<DependencyEdge> {
         val psiManager = PsiManager.getInstance(project)
         return getAllFiles()

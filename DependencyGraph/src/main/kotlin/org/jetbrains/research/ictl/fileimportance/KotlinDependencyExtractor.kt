@@ -6,7 +6,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.refactoring.suggested.startOffset
 
-class KotlinDependencyExtractor(project: Project) : DependencyExtractor(project) {
+class KotlinDependencyExtractor(project: Project, args: ExportDependenciesArgs) : DependencyExtractor(project, args) {
     override fun extractEdges(): Sequence<DependencyEdge> {
         val psiManager = PsiManager.getInstance(project)
         return getAllFiles()
