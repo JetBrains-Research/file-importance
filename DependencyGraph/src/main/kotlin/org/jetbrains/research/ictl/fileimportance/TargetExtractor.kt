@@ -19,17 +19,18 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
 
         // Finding the directories of intrest
         val lookupList = projectDir.children.toMutableList()
-        while (lookupList.isNotEmpty()) {
-            val file = lookupList.last()
-            lookupList.remove(file)
+        val iterator = lookupList.listIterator()
+        while (iterator.hasNext()) {
+            val file = iterator.next()
+            iterator.remove()
             if (file.isDirectory) {
                 // Check if the directory only contains another directory
                 if (file.children.size != 1 || !file.children[0].isDirectory) {
                     directories[file.getFileName()] = 0
                 }
 
-                file.children?.let {
-                    lookupList.addAll(file.children)
+                file.children?.forEach {
+                    iterator.add(it)
                 }
             }
         }
@@ -41,18 +42,18 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
             var parentPath = file.virtualFile.getFileName()
             while (parentPath.contains("/")) {
                 parentPath = parentPath.substring(0, parentPath.lastIndexOf("/"))
-                if (directories.containsKey(parentPath)) {
-                    directories[parentPath] = directories[parentPath]!! + count
-                }
+                directories.computeIfPresent(parentPath) { path, prevCount ->
+                    prevCount + count
+                }?.let { directories[parentPath] = it }
             }
 
             directories[rootDirectory] = directories[rootDirectory]!! + count
         }
 
         // Select top 5% directories
-        var selectTargetCount = directories.size / 20
-        if (selectTargetCount < 50) {
-            selectTargetCount = 50
+        val selectTargetCount = when {
+            directories.size >= 1000 -> 50
+            else -> directories.size / 20
         }
 
         return directories.toList()
