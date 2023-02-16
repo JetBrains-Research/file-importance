@@ -2,7 +2,6 @@ package org.jetbrains.research.ictl.fileimportance
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
-import io.ktor.utils.io.*
 
 class TargetExtractor(private val project: Project, private val dependencyExtractors: List<DependencyExtractor>) {
     fun extract(): List<String>? {
@@ -41,7 +40,7 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
             var parentPath = file.virtualFile.getFileName()
             while (parentPath.contains("/")) {
                 parentPath = parentPath.substring(0, parentPath.lastIndexOf("/"))
-                directories.computeIfPresent(parentPath) { path, prevCount ->
+                directories.computeIfPresent(parentPath) { _, prevCount ->
                     prevCount + count
                 }?.let { directories[parentPath] = it }
             }

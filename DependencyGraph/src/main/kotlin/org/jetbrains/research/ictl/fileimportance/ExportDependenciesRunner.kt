@@ -9,10 +9,12 @@ import kotlin.system.exitProcess
 import kotlinx.serialization.ExperimentalSerializationApi
 
 class ExportDependenciesRunner : ApplicationStarter {
-    override fun getCommandName(): String = "extractDependencies"
+    @Deprecated("Specify it as `id` for extension definition in a plugin descriptor")
+    override val commandName: String
+        get() = "extractDependencies"
 
     @OptIn(ExperimentalSerializationApi::class)
-    override fun main(args: MutableList<String>) {
+    override fun main(args: List<String>) {
         log(Utils.BANNER)
 
         ARGS = ExportDependenciesArgs.parse(args)
@@ -55,15 +57,14 @@ class ExportDependenciesRunner : ApplicationStarter {
 
         dependencyExtractors.forEach { it.prepare() }
 
+        var header = true
         ARGS.graphFile.bufferedWriter().use { edgesWriter ->
-            dependencyExtractors.forEachIndexed { extractorIndex, extractor ->
+            dependencyExtractors.forEach { extractor ->
                 extractor
                     .extractEdges()
-                    .forEachIndexed { index, dependencyEdge ->
-                        edgesWriter.append(CSVFormat.encodeToString(dependencyEdge, index == 0))
-                        if ((index + 1) % 1000 == 0) {
-                            log("Written $index edges")
-                        }
+                    .forEach { dependencyEdge ->
+                        edgesWriter.append(CSVFormat.encodeToString(dependencyEdge, header))
+                        header = false
                     }
             }
         }

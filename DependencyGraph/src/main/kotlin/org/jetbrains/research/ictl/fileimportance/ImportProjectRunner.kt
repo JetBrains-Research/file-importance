@@ -7,9 +7,11 @@ import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
 class ImportProjectRunner : ApplicationStarter {
-    override fun getCommandName(): String = "importProject"
+    @Deprecated("Specify it as `id` for extension definition in a plugin descriptor")
+    override val commandName: String
+        get() = "importProject"
 
-    override fun main(args: MutableList<String>) {
+    override fun main(args: List<String>) {
         log(Utils.BANNER)
 
         val projectPath = Path(args[1])
