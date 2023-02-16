@@ -39,8 +39,17 @@ fun getPsiFiles(project: Project, ext: String) = sequence<PsiFile> {
     }
 }
 
-fun JavaRecursiveElementVisitor(overrideVisitElement: JavaRecursiveElementVisitor.(PsiElement) -> Unit) =
-    object : JavaRecursiveElementVisitor() {
+abstract class JavaRecursiveElementVisitorForAFile : JavaRecursiveElementVisitor() {
+    abstract val filename: String
+}
+
+fun JavaRecursiveElementVisitor(
+    filename: String,
+    overrideVisitElement: JavaRecursiveElementVisitorForAFile.(PsiElement) -> Unit
+) =
+    object : JavaRecursiveElementVisitorForAFile() {
+        override val filename = filename
+
         override fun visitElement(element: PsiElement) {
             this.overrideVisitElement(element)
             super.visitElement(element)

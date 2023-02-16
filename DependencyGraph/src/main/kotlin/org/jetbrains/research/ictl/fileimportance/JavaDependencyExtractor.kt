@@ -14,7 +14,7 @@ class JavaDependencyExtractor(project: Project) : DependencyExtractor(project) {
 
                 try {
                     it.acceptChildren(
-                        JavaRecursiveElementVisitor { element ->
+                        JavaRecursiveElementVisitor(it.getFileName()) { element ->
                             if (!foundElementOffsets.contains(element.startOffset)) {
                                 element.references
                                     .filterNotNull()
@@ -23,7 +23,7 @@ class JavaDependencyExtractor(project: Project) : DependencyExtractor(project) {
                                         if (resolve != null && psiManager.isInProject(resolve) && resolve.containingFile != null &&
                                             !element.containingFile.isEquivalentTo(resolve.containingFile)
                                         ) {
-                                            result.add(DependencyEdge(element.getFileName(), resolve.getFileName()))
+                                            result.add(DependencyEdge(filename, resolve.getFileName()))
                                         }
                                     }
                             }
@@ -37,5 +37,5 @@ class JavaDependencyExtractor(project: Project) : DependencyExtractor(project) {
     }
 
     override fun getAllFiles(): Sequence<PsiFile> = getPsiFiles(project, "java")
-    override fun prepare() = getAllFiles().forEach { it.acceptChildren(JavaRecursiveElementVisitor {}) }
+    override fun prepare() = getAllFiles().forEach { it.acceptChildren(JavaRecursiveElementVisitor("") {}) }
 }
