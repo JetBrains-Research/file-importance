@@ -3,15 +3,12 @@ package org.jetbrains.research.ictl.fileimportance
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationStarter
 import com.intellij.util.io.exists
-
 import kotlin.io.path.Path
 import kotlin.system.exitProcess
-import kotlinx.serialization.ExperimentalSerializationApi
 
 class ImportProjectRunner : ApplicationStarter {
     override fun getCommandName(): String = "importProject"
 
-    @OptIn(ExperimentalSerializationApi::class)
     override fun main(args: MutableList<String>) {
         log(Utils.BANNER)
 

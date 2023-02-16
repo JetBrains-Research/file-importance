@@ -2,9 +2,7 @@ package org.jetbrains.research.ictl.fileimportance
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
@@ -26,7 +24,7 @@ inline fun <reified T> log(log: T) {
     println("****Miner**** $log")
 }
 
-fun getPsiFiles(project: Project, ext: String) = sequence<PsiFile> {
+fun getPsiFiles(project: Project, ext: String) = sequence {
     log("get all $ext files")
     val psiManager = PsiManager.getInstance(project)
 
@@ -38,20 +36,3 @@ fun getPsiFiles(project: Project, ext: String) = sequence<PsiFile> {
         }
     }
 }
-
-abstract class JavaRecursiveElementVisitorForAFile : JavaRecursiveElementVisitor() {
-    abstract val filename: String
-}
-
-fun JavaRecursiveElementVisitor(
-    filename: String,
-    overrideVisitElement: JavaRecursiveElementVisitorForAFile.(PsiElement) -> Unit
-) =
-    object : JavaRecursiveElementVisitorForAFile() {
-        override val filename = filename
-
-        override fun visitElement(element: PsiElement) {
-            this.overrideVisitElement(element)
-            super.visitElement(element)
-        }
-    }
