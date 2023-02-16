@@ -2,6 +2,7 @@ package org.jetbrains.research.ictl.fileimportance
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
@@ -9,7 +10,7 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 
 object Utils {
-    public const val BANNER =
+    const val BANNER =
         "\n    ____                            __                         __  ____                \n" +
                 "   / __ \\___  ____  ___  ____  ____/ /__  ____  _______  __   /  |/  (_)___  ___  _____\n" +
                 "  / / / / _ \\/ __ \\/ _ \\/ __ \\/ __  / _ \\/ __ \\/ ___/ / / /  / /|_/ / / __ \\/ _ \\/ ___/\n" +
@@ -31,10 +32,17 @@ fun getPsiFiles(project: Project, ext: String) = sequence<PsiFile> {
 
     FilenameIndex.getAllFilesByExt(project, ext, GlobalSearchScope.projectScope(project)).forEach {
         val file = psiManager.findFile(it)
-        // yieldNotNull does causes java.lang.ClassNotFoundException: org.jetbrains.kotlin.utils.CollectionsKt
-        if (file != null) {
+        // yieldNotNull raises java.lang.ClassNotFoundException: org.jetbrains.kotlin.utils.CollectionsKt
+        file?.let {
             yield(file)
         }
     }
 }
 
+fun JavaRecursiveElementVisitor(overrideVisitElement: JavaRecursiveElementVisitor.(PsiElement) -> Unit) =
+    object : JavaRecursiveElementVisitor() {
+        override fun visitElement(element: PsiElement) {
+            this.overrideVisitElement(element)
+            super.visitElement(element)
+        }
+    }

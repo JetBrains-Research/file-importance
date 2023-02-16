@@ -23,7 +23,6 @@ internal class CSVEncoder(
         }
         first = false
         builder.append(value)
-
     }
 
     override fun encodeNull() {
@@ -34,10 +33,10 @@ internal class CSVEncoder(
     }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
-//        if (depth == 0) {
-//            builder.append(lineSeparator)
-//            first = true
-//        }
+        // if (depth == 0) {
+        // builder.append(lineSeparator)
+        // first = true
+        // }
         depth++
         return this
     }

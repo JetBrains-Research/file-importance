@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.refactoring.suggested.startOffset
 
-class JavaDependencyExtractor(project: Project) : IDependencyExtractor(project) {
+class JavaDependencyExtractor(project: Project) : DependencyExtractor(project) {
     override fun extractEdges(): Sequence<DependencyEdge> {
         val psiManager = PsiManager.getInstance(project)
         return getAllFiles()
@@ -12,14 +12,10 @@ class JavaDependencyExtractor(project: Project) : IDependencyExtractor(project) 
                 val result = mutableListOf<DependencyEdge>()
                 val foundElementOffsets = mutableListOf<Int>()
 
-//                log("File -> ${it.getFileName()}")
-
-                try{
-                    it.acceptChildren(object : JavaRecursiveElementVisitor() {
-                        override fun visitElement(element: PsiElement) {
+                try {
+                    it.acceptChildren(
+                        JavaRecursiveElementVisitor { element ->
                             if (!foundElementOffsets.contains(element.startOffset)) {
-//                            foundElementOffsets.add(element.startOffset)
-
                                 element.references
                                     .filterNotNull()
                                     .forEach {
@@ -31,11 +27,9 @@ class JavaDependencyExtractor(project: Project) : IDependencyExtractor(project) 
                                         }
                                     }
                             }
-
-                            super.visitElement(element)
                         }
-                    })
-                }catch (e: Exception){
+                    )
+                } catch (e: Exception) {
                     e.printStackTrace()
                 }
                 result
@@ -43,14 +37,5 @@ class JavaDependencyExtractor(project: Project) : IDependencyExtractor(project) 
     }
 
     override fun getAllFiles(): Sequence<PsiFile> = getPsiFiles(project, "java")
-    override fun prepare() = getAllFiles().forEach { it.acceptChildren(object : JavaRecursiveElementVisitor() {}) }
-
-    private fun isMethodAndNotConstructor(element: PsiElement) =
-        PsiMethod::class.java.isAssignableFrom(element::class.java) && !(element as PsiMethod).isConstructor
-
-    private fun isFiled(element: PsiElement) =
-        PsiField::class.java.isAssignableFrom(element::class.java)
-
-    private fun isClass(element: PsiElement) =
-        PsiClass::class.java.isAssignableFrom(element::class.java)
+    override fun prepare() = getAllFiles().forEach { it.acceptChildren(JavaRecursiveElementVisitor {}) }
 }

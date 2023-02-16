@@ -14,7 +14,6 @@ data class ExportDependenciesArgs(
 ) {
     companion object {
         fun parse(args: List<String>): ExportDependenciesArgs {
-
             val projectPath = Path(args[1])
             if (!projectPath.exists()) {
                 log("Path $projectPath does not exist")

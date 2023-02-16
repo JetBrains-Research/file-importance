@@ -3,13 +3,12 @@ package org.jetbrains.research.ictl.fileimportance
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 
-class TargetExtractor(private val project: Project, private val dependencyExtractors: List<IDependencyExtractor>) {
-
+class TargetExtractor(private val project: Project, private val dependencyExtractors: List<DependencyExtractor>) {
     fun extract(): List<String>? {
         log("exporting target path")
 
         val projectDir = project.guessProjectDir()
-        if (projectDir == null) {
+        projectDir ?: run {
             log("Can not find root project dir")
             return null
         }
@@ -29,13 +28,13 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
                     directories[file.getFileName()] = 0
                 }
 
-                if (file.children != null) {
+                file.children?.let {
                     lookupList.addAll(file.children)
                 }
             }
         }
 
-//         Find out number of characters in java files under any directory of interest
+        // Find out number of characters in java files under any directory of interest
         val files = dependencyExtractors.flatMap { it.getAllFiles() }
         for (file in files) {
             val count = file.textLength
@@ -52,10 +51,24 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
 
         // Select top 5% directories
         var selectTargetCount = directories.size / 20
-        if (selectTargetCount < 50){
+        if (selectTargetCount < 50) {
             selectTargetCount = 50
         }
 
-        return directories.toList().sortedByDescending { it.second }.take(selectTargetCount).map { it.first }
+        return directories.toList()
+            .sortedByDescending { it.second }
+            .take(selectTargetCount)
+            .map { it.first }
+    }
+
+    fun exportTargetDirectories() {
+        val targets = extract() ?: return
+
+        log("writing target directories")
+        ExportDependenciesRunner.ARGS.targetDirectories
+            .bufferedWriter()
+            .use { writer ->
+                targets.forEach { writer.appendLine(it) }
+            }
     }
 }
