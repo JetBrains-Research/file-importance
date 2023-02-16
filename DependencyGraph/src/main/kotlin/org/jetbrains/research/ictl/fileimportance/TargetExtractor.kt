@@ -2,6 +2,7 @@ package org.jetbrains.research.ictl.fileimportance
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import io.ktor.utils.io.*
 
 class TargetExtractor(private val project: Project, private val dependencyExtractors: List<DependencyExtractor>) {
     fun extract(): List<String>? {
@@ -19,18 +20,16 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
 
         // Finding the directories of intrest
         val lookupList = projectDir.children.toMutableList()
-        val iterator = lookupList.listIterator()
-        while (iterator.hasNext()) {
-            val file = iterator.next()
-            iterator.remove()
+        while (lookupList.isNotEmpty()) {
+            val file = lookupList.removeLast()
             if (file.isDirectory) {
                 // Check if the directory only contains another directory
                 if (file.children.size != 1 || !file.children[0].isDirectory) {
                     directories[file.getFileName()] = 0
                 }
 
-                file.children?.forEach {
-                    iterator.add(it)
+                file.children?.let {
+                    lookupList.addAll(it)
                 }
             }
         }
@@ -52,8 +51,8 @@ class TargetExtractor(private val project: Project, private val dependencyExtrac
 
         // Select top 5% directories
         val selectTargetCount = when {
-            directories.size >= 1000 -> 50
-            else -> directories.size / 20
+            directories.size >= 1000 -> directories.size / 20
+            else -> 50
         }
 
         return directories.toList()
