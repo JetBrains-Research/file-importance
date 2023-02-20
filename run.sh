@@ -3,7 +3,7 @@
 set -e
 
 if [ $# -ne "4" ]; then
-  echo "usage: run <path to project> <repository owner> <repository name> <github token>"
+  echo "usage: run <path to local repository> <repository owner> <repository name> <github token>"
   exit 1
 fi
 
