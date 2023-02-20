@@ -2,9 +2,13 @@ package org.jetbrains.research.ictl.fileimportance
 
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.vfs.VirtualFile
+import java.io.File
 import java.nio.file.Path
 
-class TargetExtractor(private val dependencyExtractors: List<DependencyExtractor>) {
+class TargetExtractor(
+    private val dependencyExtractors: List<DependencyExtractor>,
+    private val targetDirectories: File
+) {
     fun extract(): List<String>? {
         log("exporting target paths")
 
@@ -14,7 +18,7 @@ class TargetExtractor(private val dependencyExtractors: List<DependencyExtractor
             log("Can not find root project dir")
             return null
         }
-        val projectPath = dependencyExtractors.first().args.projectPath
+        val projectPath = dependencyExtractors.first().projectPath
 
         val directories = HashMap<String, Long>()
         val rootDirectory = ""
@@ -37,7 +41,7 @@ class TargetExtractor(private val dependencyExtractors: List<DependencyExtractor
         }
 
         // Find out number of characters in java files under any directory of interest
-        val files = dependencyExtractors.flatMap { it.getAllFiles() }
+        val files = dependencyExtractors.asSequence().flatMap { it.getAllPsiFiles() }
         for (file in files) {
             val count = file.textLength
             var parentPath = file.virtualFile.getFileName(projectPath)
@@ -67,7 +71,7 @@ class TargetExtractor(private val dependencyExtractors: List<DependencyExtractor
         val targets = extract() ?: return
 
         log("writing target directories")
-        dependencyExtractors.first().args.targetDirectories
+        targetDirectories
             .bufferedWriter()
             .use { writer ->
                 targets.forEach { writer.appendLine(it) }

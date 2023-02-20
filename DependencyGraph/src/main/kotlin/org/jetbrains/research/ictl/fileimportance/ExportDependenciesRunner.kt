@@ -46,11 +46,11 @@ class ExportDependenciesRunner : ApplicationStarter {
         args: ExportDependenciesArgs
     ) {
         val dependencyExtractors = listOf(
-            JavaDependencyExtractor(project, args),
-            KotlinDependencyExtractor(project, args)
+            DependencyExtractor(project, "java", args.projectPath),
+            DependencyExtractor(project, "kt", args.projectPath)
         )
 
-        TargetExtractor(dependencyExtractors).exportTargetDirectories()
+        TargetExtractor(dependencyExtractors, args.targetDirectories).exportTargetDirectories()
 
         dependencyExtractors.forEach { it.prepare() }
 
