@@ -93,10 +93,10 @@ def export_results(repositories):
     workbook.close()
 
 
-def get_high_stars(it, min_start_cunt):
+def get_high_stars(it, min_start_count):
     result = []
     for i in it:
-        if i.stargazers_count < min_start_cunt:
+        if i.stargazers_count < min_start_count:
             break
 
         result += [i]
