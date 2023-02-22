@@ -29,7 +29,6 @@ def generate_random_color():
 
 def load_graph(path):
     log(f"Loading graph from {path}")
-    results = []  # never used
     with open(path) as f:
         data_frame = pd.read_csv(f)
         return nx.from_pandas_edgelist(data_frame, source="source", target="destination", create_using=nx.DiGraph())
