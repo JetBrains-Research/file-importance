@@ -50,12 +50,12 @@ def create_feature_vector(graph):
     return features, names
 
 
-def cluster_nodes(features):
+def cluster_nodes(features, number_of_clusters=2):
     log("Clustering nodes")
 
-    kmeans = KMeans(n_clusters=2, random_state=0).fit(features)
+    kmeans = KMeans(n_clusters=number_of_clusters, random_state=0).fit(features)
     # kmeans doesn't have outliers, so you can generate a color for each cluster
-    color_labels = [generate_random_color() for _ in range(2)]
+    color_labels = [generate_random_color() for _ in range(number_of_clusters)]
     color_map = [color_labels[l] for l in kmeans.labels_]
 
     return color_map
