@@ -21,14 +21,26 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.register("cloneAlibaba") {
+tasks.register("cloneTestRepo") {
+    val folderName = project.property("testrepo.folder") as String
+    val repoUrl = project.property("testrepo.url") as String
+
+    val repoFile = File("${project.projectDir}/$folderName")
+
     doFirst {
+        if (repoFile.exists()) {
+            println("repo seems to have been cloned already")
+            return@doFirst
+        }
         val repo = Git.cloneRepository()
-            .setURI("https://github.com/alibaba/spring-cloud-alibaba.git")
-            .setDirectory(File("${project.projectDir}/testrepo"))
+            .setURI(repoUrl)
+            .setDirectory(repoFile)
             .call()
-        repo.checkout()
-            .setName("583d287687afef3ed15a378b932854a1b5570fa7") // last 2022 commit
-            .call()
+        if (project.hasProperty("testrepo.commit")) {
+            val commit = project.property("testrepo.commit") as String
+            repo.checkout()
+                .setName(commit)
+                .call()
+        }
     }
 }
