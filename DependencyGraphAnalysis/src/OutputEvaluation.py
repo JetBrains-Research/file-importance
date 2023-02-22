@@ -3,8 +3,8 @@ import sys
 import xlsxwriter
 
 
-def log(log):
-    print(f"****Exporter**** {log}")
+def log(msg):
+    print(f"****Exporter**** {msg}")
 
 
 def load_data(path):
@@ -16,6 +16,7 @@ def load_data(path):
 
 
 def get_args():
+    # same as dependencygracphevaluator, will throw an exception when fewer args are parsed
     output_file = sys.argv[1]
     if output_file is None:
         log("Please enter output file")
@@ -259,13 +260,15 @@ def write_BF_Info(workbook, data):
         worksheet.merge_range(path_row, 1, row - 1, 1, "%.2f" % d["disagreement"], centered_text)
 
 
-output_file, authorship_file, input_files = get_args()
-inputs = load_inputs(input_files)
-authorship_info = load_authorship_info(authorship_file)
-data = merge_inputs(inputs)
-data = calculate_disagreement(data)
+if __name__ == "__main__":
+    # probably missing logging here
+    output_file, authorship_file, input_files = get_args()
+    inputs = load_inputs(input_files)
+    authorship_info = load_authorship_info(authorship_file)
+    data = merge_inputs(inputs)
+    data = calculate_disagreement(data)
 
-workbook = xlsxwriter.Workbook(output_file)
-write_BF_Info(workbook, data)
-write_authorship_info(workbook, data, authorship_info)
-workbook.close()
+    workbook = xlsxwriter.Workbook(output_file)
+    write_BF_Info(workbook, data)
+    write_authorship_info(workbook, data, authorship_info)
+    workbook.close()

@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import traceback
+from collections import defaultdict
 
 import pandas as pd
 import requests
@@ -10,8 +11,8 @@ from pydriller import Repository
 from utils import get_clusters
 
 
-def log(log):
-    print(f"****Developer Identifier**** {log}")
+def log(msg):
+    print(f"****Developer Identifier**** {msg}")
 
 
 class UserInfo:
@@ -35,22 +36,20 @@ class UserInfo:
 class UsersData:
     def __init__(self):
         self.users = set()
-        self.email_count = {}
-        self.name_count = {}
+
+        # this can be done by Counter of defaultdict
+        self.email_count = defaultdict(int)
+        self.name_count = defaultdict(int)
 
     def add_user(self, user):
         self.users.add(user)
-        self.increment_count(self.name_count, user[0])
-        self.increment_count(self.email_count, user[1])
+
+        self.email_count[user[0]] += 1
+        self.name_count[user[1]] += 1
 
     def add_users(self, users):
         for u in users:
             self.add_user(u)
-
-    def increment_count(self, count_dictionary, name):
-        if name not in count_dictionary:
-            count_dictionary[name] = 0
-        count_dictionary[name] += 1
 
     def create_dataframe(self):
         return pd.DataFrame({'email': [u[1] for u in self.users],
@@ -59,19 +58,14 @@ class UsersData:
                              'initial_id': [f"{u[0]}:{u[1]}:{u[2]}" for u in self.users]})
 
     def get_email_count(self, email):
-        if email not in self.email_count:
-            return 0
-
         return self.email_count[email]
 
     def get_name_count(self, name):
-        if name not in self.name_count:
-            return 0
-
         return self.name_count[name]
 
 
 class Args:
+    # same suggestion about argparse
     def __init__(self, args):
         if len(args) < 8:
             print("PLease enter <Github Token> <Repository Owner> <Repository Name> "
@@ -262,13 +256,14 @@ def print_clusters(clusters):
             print(clusters[c])
 
 
-args = Args(sys.argv)
+if __name__ == "__main__":
+    args = Args(sys.argv)
 
-local_info = read_local_repository(args.repository_local_path)
-github_info = read_github_repository(args.github_token, args.repository_owner, args.repository_name)
-users_data = create_users_data(local_info, github_info)
-clusters = find_matches(users_data)
-generate_jetbrains_output(clusters, args.jetbrains_output_path)
-generate_avelino_output(clusters, args.avelino_output_path)
-save_clusters(clusters, args.users_save_path)
-print_clusters(clusters)
+    local_info = read_local_repository(args.repository_local_path)
+    github_info = read_github_repository(args.github_token, args.repository_owner, args.repository_name)
+    users_data = create_users_data(local_info, github_info)
+    clusters = find_matches(users_data)
+    generate_jetbrains_output(clusters, args.jetbrains_output_path)
+    generate_avelino_output(clusters, args.avelino_output_path)
+    save_clusters(clusters, args.users_save_path)
+    print_clusters(clusters)

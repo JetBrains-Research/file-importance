@@ -78,11 +78,11 @@ def export_results(repositories):
             row = row + 1
 
         if row - first_row > 1:
-            worksheet.merge_range(first_row, 0, row-1, 0, count, centered_text)
-            worksheet.merge_range(first_row, 1, row-1, 1, repo.full_name, left_text_format)
-            worksheet.merge_range(first_row, 2, row-1, 2, repo.html_url, left_text_format)
-            worksheet.merge_range(first_row, 3, row-1, 3, repo.stargazers_count, centered_text)
-            worksheet.merge_range(first_row, 4, row-1, 4, "%.2f" % repo.lang_coverage, centered_text)
+            worksheet.merge_range(first_row, 0, row - 1, 0, count, centered_text)
+            worksheet.merge_range(first_row, 1, row - 1, 1, repo.full_name, left_text_format)
+            worksheet.merge_range(first_row, 2, row - 1, 2, repo.html_url, left_text_format)
+            worksheet.merge_range(first_row, 3, row - 1, 3, repo.stargazers_count, centered_text)
+            worksheet.merge_range(first_row, 4, row - 1, 4, "%.2f" % repo.lang_coverage, centered_text)
         else:
             worksheet.write(first_row, 0, count, centered_text)
             worksheet.write(first_row, 1, repo.full_name, left_text_format)
@@ -93,27 +93,27 @@ def export_results(repositories):
     workbook.close()
 
 
-def get_high_stars(it, min_start_cunt):
+def get_high_stars(it, min_start_count):
     result = []
     for i in it:
-        if i.stargazers_count < min_start_cunt:
+        if i.stargazers_count < min_start_count:
             break
 
         result += [i]
     return result
 
 
-g = Github(login_or_token="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")
-queries = ["Java", "Kotlin"]
-all_repositories = []
-for q in queries:
-    fetched_repositories = g.search_repositories(query=q, sort='stars', order='desc')
-    repositories = get_high_stars(fetched_repositories, 10000)
-    process_repository(repositories)
-    all_repositories += repositories
+if __name__ == "__main__":
+    g = Github(login_or_token="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")
+    queries = ["Java", "Kotlin"]
+    all_repositories = []
+    for q in queries:
+        fetched_repositories = g.search_repositories(query=q, sort='stars', order='desc')
+        repositories = get_high_stars(fetched_repositories, 10000)
+        process_repository(repositories)
+        all_repositories += repositories
 
-
-all_repositories = sorted(all_repositories, key=lambda r: r.stargazers_count, reverse=True)
-print("Exporting results")
-# print_repositories(all_repositories)
-export_results(all_repositories)
+    all_repositories = sorted(all_repositories, key=lambda r: r.stargazers_count, reverse=True)
+    print("Exporting results")
+    # print_repositories(all_repositories)
+    export_results(all_repositories)
