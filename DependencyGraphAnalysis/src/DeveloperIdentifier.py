@@ -2,12 +2,12 @@ import json
 import os
 import sys
 import traceback
+from collections import defaultdict
 
 import pandas as pd
 import requests
 from pydriller import Repository
 
-from collections import defaultdict
 from utils import get_clusters
 
 
@@ -46,17 +46,10 @@ class UsersData:
 
         self.email_count[user[0]] += 1
         self.name_count[user[1]] += 1
-        # self.increment_count(self.name_count, user[0])
-        # self.increment_count(self.email_count, user[1])
 
     def add_users(self, users):
         for u in users:
             self.add_user(u)
-
-    # def increment_count(self, count_dictionary, name):
-    #     if name not in count_dictionary:
-    #         count_dictionary[name] = 0
-    #     count_dictionary[name] += 1
 
     def create_dataframe(self):
         return pd.DataFrame({'email': [u[1] for u in self.users],
@@ -65,17 +58,9 @@ class UsersData:
                              'initial_id': [f"{u[0]}:{u[1]}:{u[2]}" for u in self.users]})
 
     def get_email_count(self, email):
-        # with defaultdict you can just return self.email_count[email]
-        if email not in self.email_count:
-            return 0
-
         return self.email_count[email]
 
     def get_name_count(self, name):
-        # with defaultdict you can just return self.name_count[name]
-        if name not in self.name_count:
-            return 0
-
         return self.name_count[name]
 
 
