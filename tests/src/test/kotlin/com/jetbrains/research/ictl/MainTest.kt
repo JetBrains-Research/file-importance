@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.util.Properties
+import java.util.concurrent.TimeUnit
+import java.lang.ProcessBuilder.Redirect
 
 class MainTest {
     companion object {
@@ -24,7 +26,16 @@ class MainTest {
     }
 
     @Test
-    fun notest() {
+    fun run() {
+        val file = File("./testrepo")
+        if (file.exists()) {
+            println("IT EXISTS!")
+        }
+        ProcessBuilder("./gradlew",  "-p", "../DependencyGraph", "extractDependencies", "-Pprojectpath=${file.absolutePath}",  "-Pgraphpath='./out/graph.csv'",  "-Ptargetdirectories='./out/targets.txt'")
+            .redirectOutput(Redirect.INHERIT)
+            .redirectError(Redirect.INHERIT)
+            .start()
+            .waitFor(60, TimeUnit.MINUTES)
         assertTrue(true)
     }
 }
