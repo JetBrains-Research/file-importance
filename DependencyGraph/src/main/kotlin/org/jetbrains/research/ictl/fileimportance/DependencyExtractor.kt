@@ -17,7 +17,6 @@ class DependencyExtractor(
     val projectPath: Path
 ) : PsiRecursiveElementVisitor() {
     private val edgesBuffer: MutableList<DependencyEdge> = mutableListOf()
-    private val foundElementOffsets = mutableListOf<Int>()
     private val psiManager = PsiManager.getInstance(project)
 
     fun extractEdges() = sequence {
@@ -30,25 +29,23 @@ class DependencyExtractor(
                 } finally {
                     yieldAll(edgesBuffer)
                     edgesBuffer.clear()
-                    foundElementOffsets.clear()
                 }
             }
     }
 
     override fun visitElement(element: PsiElement) {
-        if (!foundElementOffsets.contains(element.startOffset)) {
-            element
-                .references
-                .filterNotNull()
-                .forEach {
-                    val resolve = it.resolve()
-                    if (resolve != null && psiManager.isInProject(resolve) && resolve.containingFile != null &&
-                        !it.element.containingFile.isEquivalentTo(resolve.containingFile)
-                    ) {
-                        edgesBuffer.add(DependencyEdge(element.getFileName(), resolve.getFileName()))
-                    }
+        element
+            .references
+            .filterNotNull()
+            .forEach {
+                val resolve = it.resolve()
+                if (resolve != null && psiManager.isInProject(resolve) && resolve.containingFile != null &&
+                    !it.element.containingFile.isEquivalentTo(resolve.containingFile)
+                ) {
+                    edgesBuffer.add(DependencyEdge(element.getFileName(), resolve.getFileName()))
                 }
-        }
+            }
+
         super.visitElement(element)
     }
 
