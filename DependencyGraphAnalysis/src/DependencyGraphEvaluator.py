@@ -1,11 +1,11 @@
+import argparse
+import random
+import time
+
 import networkx as nx
 import numpy as np
-from sklearn.cluster import KMeans
-import random
-import sys
 import pandas as pd
-import time
-import argparse
+from sklearn.cluster import KMeans
 
 measures = [
     (nx.pagerank, "pageRank"),
@@ -69,17 +69,7 @@ def print_banner():
               /_/                                     /____/                        /____/                   """)
 
 
-if __name__ == "__main__":
-
-    print_banner()
-    # Parsing parameters
-
-    """
-    when fewer than 4 parameters are passed it will fall with IndexError exception. So you need to check beforehand how 
-    many were passed and exit the code if necessary. Also the are no check for the values other than not None.
-    Also, I suggest considering using argparse library, I'll leave commented example below
-    
-    
+def parse_arguments():
     parser = argparse.ArgumentParser(description="dependency graph evaluator")
 
     parser.add_argument("-g", "--graph_file_path", type=str, help="path to the graph", required=True)
@@ -87,27 +77,13 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--output_features_path", type=str, help="path to output features", required=True)
     args = parser.parse_args()
 
-    graph_file_path = args.graph_file_path
-    output_image_path = args.output_image_path
-    output_features_path = args.output_features_path
-    
-    
-    """
+    return args.graph_file_path, args.output_image_path, args.output_features_path
 
-    graph_file_path = sys.argv[1]
-    if graph_file_path is None:
-        log("Please enter graph file path")
-        exit(1120)
 
-    output_image_path = sys.argv[2]
-    if output_image_path is None:
-        log("Please enter output image file path")
-        exit(1121)
+if __name__ == "__main__":
+    print_banner()
 
-    output_features_path = sys.argv[3]
-    if output_features_path is None:
-        log("Please enter output features file path")
-        exit(1122)
+    graph_file_path, output_image_path, output_features_path = parse_arguments()
 
     graph = load_graph(graph_file_path)
 
