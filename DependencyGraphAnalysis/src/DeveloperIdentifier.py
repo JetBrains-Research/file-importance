@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import sys
@@ -64,21 +65,22 @@ class UsersData:
         return self.name_count[name]
 
 
-class Args:
-    # same suggestion about argparse
-    def __init__(self, args):
-        if len(args) < 8:
-            print("PLease enter <Github Token> <Repository Owner> <Repository Name> "
-                  "<Repository Local Path> <Avelino Output Path> <JetBrains Output path> <Users Output Path>")
-            exit(1000)
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Detecting developer duplicates")
 
-        self.github_token = args[1]
-        self.repository_owner = args[2]
-        self.repository_name = args[3]
-        self.repository_local_path = args[4]
-        self.jetbrains_output_path = args[5]
-        self.avelino_output_path = args[6]
-        self.users_save_path = args[7]
+    parser.add_argument("-g", "--github_token", type=str, help="github authentication token", required=True)
+    parser.add_argument("-o", "--repository_owner", type=str, help="github repository owner", required=True)
+    parser.add_argument("-n", "--repository_name", type=str, help="github repository name", required=True)
+    parser.add_argument("-l", "--repository_local_path", type=str, help="local path to the cloned repository",
+                        required=True)
+    parser.add_argument("-j", "--jetbrains_output_path", type=str,
+                        help="path to the final alias file for JetBrains plugin", required=True)
+    parser.add_argument("-a", "--avelino_output_path", type=str,
+                        help="path to the final alias file for Avelino plugin", required=True)
+    parser.add_argument("-u", "--users_save_path", type=str, help="path to save users information", required=True)
+    args = parser.parse_args()
+
+    return args
 
 
 def read_local_repository(path):
@@ -257,7 +259,7 @@ def print_clusters(clusters):
 
 
 if __name__ == "__main__":
-    args = Args(sys.argv)
+    args = parse_arguments()
 
     local_info = read_local_repository(args.repository_local_path)
     github_info = read_github_repository(args.github_token, args.repository_owner, args.repository_name)

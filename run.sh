@@ -44,7 +44,7 @@ jetbrainsMergeFilePath="$projectPath/merged_emails.json"
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
 pip3 install -r requirements.txt
 python3 ./src/DependencyGraphEvaluator.py -g "$graphFilePath" -i "$graphImagePath" -f "$featuresFilePath"
-python3 ./src/DeveloperIdentifier.py "$githubToken" "$repositoryOwner" "$repositoryName" "$projectPath" "$jetbrainsMergeOutput" "$avelinoMergeOutput" "$usersSavePath"
+python3 ./src/DeveloperIdentifier.py -g "$githubToken" -o "$repositoryOwner" -n "$repositoryName" -l "$projectPath" -j "$jetbrainsMergeOutput" -a "$avelinoMergeOutput" -u "$usersSavePath"
 rm -f "$avelinoMergeFilePath" "$jetbrainsMergeFilePath"
 cp "$avelinoMergeOutput" "$avelinoMergeFilePath"
 cp "$jetbrainsMergeOutput" "$jetbrainsMergeFilePath"
