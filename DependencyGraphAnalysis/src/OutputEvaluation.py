@@ -1,3 +1,4 @@
+import argparse
 import json
 import sys
 import xlsxwriter
@@ -16,23 +17,15 @@ def load_data(path):
 
 
 def get_args():
-    # same as dependencygracphevaluator, will throw an exception when fewer args are parsed
-    output_file = sys.argv[1]
-    if output_file is None:
-        log("Please enter output file")
-        exit(1120)
-    authorship_file = sys.argv[2]
-    if authorship_file is None:
-        log("Please enter authorship file")
-        exit(1130)
-    input_files = []
-    for i in range(3, len(sys.argv)):
-        input_files += [sys.argv[i]]
-    if len(input_files) == 0:
-        log("Enter input files")
-        exit(1140)
+    parser = argparse.ArgumentParser(description="Detecting developer duplicates")
 
-    return output_file, authorship_file, input_files
+    parser.add_argument("-o", "--output_file", type=str, help="output file path", required=True)
+    parser.add_argument("-a", "--authorship_file", type=str, help="authorship file path", required=True)
+    parser.add_argument("-i", "--input_files", type=str, nargs='+', help="bus factor information input files",
+                        required=True)
+
+    args = parser.parse_args()
+    return args.output_file, args.authorship_file, args.input_files
 
 
 def load_inputs(input_files):
