@@ -63,5 +63,5 @@ cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
 
 
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
-python3 ./src/OutputEvaluation.py "$resultsPath" "$authorshipPath" "$avelinoBFResult" "$jetbrainsBFResult"
+python3 ./src/OutputEvaluation.py -o "$resultsPath" -a "$authorshipPath" -i "$avelinoBFResult" "$jetbrainsBFResult"
 
