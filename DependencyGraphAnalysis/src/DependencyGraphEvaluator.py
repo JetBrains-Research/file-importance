@@ -5,6 +5,7 @@ import time
 import networkx as nx
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 from sklearn.cluster import KMeans
 
 measures = [
@@ -80,6 +81,14 @@ def parse_arguments():
     return args.graph_file_path, args.output_image_path, args.output_features_path
 
 
+def draw_graph(graph, features, output_path):
+    color_map = cluster_nodes(features)
+    nx.draw(graph, node_color=color_map, with_labels=True)
+    # plt.show()
+    log(f"Output result diagram to {output_path}")
+    plt.savefig(output_path)
+
+
 if __name__ == "__main__":
     print_banner()
 
@@ -90,12 +99,8 @@ if __name__ == "__main__":
     t = time.time()
     features, feature_names = create_feature_vector(graph)
     log(f"feature extraction time is {time.time() - t}")
-    # color_map = cluster_nodes(features)
 
-    # nx.draw(graph, node_color=color_map, with_labels=True)
-    # # plt.show()
-    # log(f"Output result diagram to {output_image_path}")
-    # plt.savefig(output_image_path)
+    # draw_graph(graph, features, output_image_path)
 
     log(f"Output features to {output_features_path}")
     df = pd.DataFrame(features, columns=feature_names, index=list(graph.nodes))
