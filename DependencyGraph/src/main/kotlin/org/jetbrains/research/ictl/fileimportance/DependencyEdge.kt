@@ -7,12 +7,3 @@ data class DependencyEdge(
     val source: String,
     val destination: String
 )
-@Serializable
-data class Features(
-    val path: String,
-    val equal: Double
-)
-
-enum class DependencyType {
-    METHOD, CLASS
-}

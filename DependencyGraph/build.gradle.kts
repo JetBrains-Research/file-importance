@@ -1,10 +1,9 @@
-import org.jetbrains.intellij.tasks.RunIdeBase
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.intellij.tasks.RunIdeTask
 
 plugins {
     id("java")
-    id("org.jetbrains.intellij") version "1.9.0"
+    id("org.jetbrains.intellij") version "1.13.0"
     kotlin("jvm") version "1.8.0"
     kotlin("plugin.serialization") version "1.8.0"
     application
@@ -18,7 +17,7 @@ repositories {
 }
 
 intellij {
-    version.set("2022.1.1")
+    version.set("2022.3.2")
     type.set("IC")
     plugins.set(listOfNotNull("java", "Kotlin"))
 }

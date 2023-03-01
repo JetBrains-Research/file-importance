@@ -1,15 +1,9 @@
 package org.jetbrains.research.ictl.fileimportance
 
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
-import com.intellij.psi.search.FilenameIndex
-import com.intellij.psi.search.GlobalSearchScope
+import kotlin.system.exitProcess
 
 object Utils {
-    public const val BANNER =
+    const val BANNER =
         "\n    ____                            __                         __  ____                \n" +
                 "   / __ \\___  ____  ___  ____  ____/ /__  ____  _______  __   /  |/  (_)___  ___  _____\n" +
                 "  / / / / _ \\/ __ \\/ _ \\/ __ \\/ __  / _ \\/ __ \\/ ___/ / / /  / /|_/ / / __ \\/ _ \\/ ___/\n" +
@@ -18,23 +12,23 @@ object Utils {
                 "          /_/                                     /____/                               "
 }
 
-fun PsiElement.getFileName() = containingFile?.virtualFile?.getFileName() ?: ""
-fun VirtualFile.getFileName() = path.replace("${ExportDependenciesRunner.ARGS.projectPath.toString()}/", "")
-
 inline fun <reified T> log(log: T) {
     println("****Miner**** $log")
 }
 
-fun getPsiFiles(project: Project, ext: String) = sequence<PsiFile> {
-    log("get all $ext files")
-    val psiManager = PsiManager.getInstance(project)
-
-    FilenameIndex.getAllFilesByExt(project, ext, GlobalSearchScope.projectScope(project)).forEach {
-        val file = psiManager.findFile(it)
-        // yieldNotNull does causes java.lang.ClassNotFoundException: org.jetbrains.kotlin.utils.CollectionsKt
-        if (file != null) {
-            yield(file)
-        }
-    }
+/**
+ * Almost the same as [require] from STD
+ */
+internal inline fun exitOnFalse(value: Boolean, lazyErrorMessage: () -> String) {
+    if (!value) exitWithMessage(lazyErrorMessage)
 }
 
+internal inline fun <T> exitOnNull(value: T?, lazyErrorMessage: () -> String): T {
+    if (value == null) exitWithMessage(lazyErrorMessage)
+    return value
+}
+
+internal inline fun exitWithMessage(lazyErrorMessage: () -> String): Nothing {
+    log(lazyErrorMessage())
+    exitProcess(1)
+}

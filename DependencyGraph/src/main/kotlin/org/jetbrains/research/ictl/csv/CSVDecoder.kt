@@ -10,7 +10,6 @@ internal class CSVDecoder(
     private val data: List<List<String>>,
     override val serializersModule: SerializersModule
 ) : AbstractDecoder() {
-
     private var index = 0
     private var level = 0
     private var currentRow = 0

@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>org.example.dependencies-plugin-idea</id>
+    <id>extractDependencies</id>
     <name>Dependencies-Miner</name>
     <vendor>ictl</vendor>
 

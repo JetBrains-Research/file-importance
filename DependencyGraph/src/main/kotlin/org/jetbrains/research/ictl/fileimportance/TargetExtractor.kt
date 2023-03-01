@@ -1,61 +1,82 @@
 package org.jetbrains.research.ictl.fileimportance
 
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.vfs.VirtualFile
+import java.io.File
+import java.nio.file.Path
 
-class TargetExtractor(private val project: Project, private val dependencyExtractors: List<IDependencyExtractor>) {
-
+class TargetExtractor(
+    private val dependencyExtractors: List<DependencyExtractor>,
+    private val targetDirectories: File
+) {
     fun extract(): List<String>? {
-        log("exporting target path")
+        log("exporting target paths")
 
-        val projectDir = project.guessProjectDir()
-        if (projectDir == null) {
+        exitOnFalse(dependencyExtractors.isNotEmpty()) { "No dependency extractors" }
+
+        val projectDir = dependencyExtractors.first().project.guessProjectDir() ?: run {
             log("Can not find root project dir")
             return null
         }
+        val projectPath = dependencyExtractors.first().projectPath
 
         val directories = HashMap<String, Long>()
         val rootDirectory = ""
         directories[rootDirectory] = 0
 
-        // Finding the directories of intrest
+        // Find directories of interest
         val lookupList = projectDir.children.toMutableList()
         while (lookupList.isNotEmpty()) {
-            val file = lookupList.last()
-            lookupList.remove(file)
+            val file = lookupList.removeLast()
             if (file.isDirectory) {
                 // Check if the directory only contains another directory
                 if (file.children.size != 1 || !file.children[0].isDirectory) {
-                    directories[file.getFileName()] = 0
+                    directories[file.getFileName(projectPath)] = 0
                 }
 
-                if (file.children != null) {
-                    lookupList.addAll(file.children)
+                file.children?.let {
+                    lookupList.addAll(it)
                 }
             }
         }
 
-//         Find out number of characters in java files under any directory of interest
-        val files = dependencyExtractors.flatMap { it.getAllFiles() }
+        // Find out number of characters in java files under any directory of interest
+        val files = dependencyExtractors.asSequence().flatMap { it.getAllPsiFiles() }
         for (file in files) {
             val count = file.textLength
-            var parentPath = file.virtualFile.getFileName()
+            var parentPath = file.virtualFile.getFileName(projectPath)
             while (parentPath.contains("/")) {
                 parentPath = parentPath.substring(0, parentPath.lastIndexOf("/"))
-                if (directories.containsKey(parentPath)) {
-                    directories[parentPath] = directories[parentPath]!! + count
-                }
+                directories.computeIfPresent(parentPath) { _, prevCount ->
+                    prevCount + count
+                }?.let { directories[parentPath] = it }
             }
 
             directories[rootDirectory] = directories[rootDirectory]!! + count
         }
 
         // Select top 5% directories
-        var selectTargetCount = directories.size / 20
-        if (selectTargetCount < 50){
-            selectTargetCount = 50
+        val selectTargetCount = when {
+            directories.size >= 1000 -> directories.size / 20
+            else -> 50
         }
 
-        return directories.toList().sortedByDescending { it.second }.take(selectTargetCount).map { it.first }
+        return directories.toList()
+            .sortedByDescending { it.second }
+            .take(selectTargetCount)
+            .map { it.first }
     }
+
+    fun exportTargetDirectories() {
+        val targets = extract() ?: return
+
+        log("writing target directories")
+        targetDirectories
+            .bufferedWriter()
+            .use { writer ->
+                targets.forEach { writer.appendLine(it) }
+            }
+    }
+
+    private fun VirtualFile.getFileName(projectPath: Path) = path.replace("${projectPath}/", "")
 }
