@@ -2,19 +2,24 @@ package com.jetbrains.research.ictl
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
-import java.util.Properties
-import java.util.concurrent.TimeUnit
-import java.lang.ProcessBuilder.Redirect
-import kotlin.system.exitProcess
+import java.util.*
+import com.jetbrains.research.ictl.Utils.Companion.assertFileExists
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import net.javacrumbs.jsonunit.assertj.assertThatJson
+import net.javacrumbs.jsonunit.core.Option
+import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.CoreMatchers.`is`
 
-class MainTest {
+class MainTest() {
     companion object {
         val properties = Properties()
+        lateinit var actualPath: String
+        lateinit var expectedPath: String
 
         @JvmStatic
         @BeforeAll
@@ -24,52 +29,92 @@ class MainTest {
                     properties.load(it)
                 }
 
-            val testRepoFile = File(properties.getProperty("testrepo.folder"))
-            assertTrue(testRepoFile.exists() && testRepoFile.isDirectory)
+            actualPath = properties.getProperty("outputs.actual")
+            expectedPath = properties.getProperty("outputs.expected")
+
+            val actualFilesDirectory = File(actualPath)
+            val expectedFilesDirectory = File(expectedPath)
+
+            assertFileExists(actualFilesDirectory, "Actual files folder")
+            assertFileExists(expectedFilesDirectory, "Expected files folder")
         }
 
         @JvmStatic
         fun provideFilenames() = listOf(
             // filename1, filename2
+            Arguments.of("authorships.json"),
+            Arguments.of("avelinoBFResults.json"),
+            Arguments.of("features.csv"),
             Arguments.of("graph.csv"),
+            Arguments.of("jetbrainsBFResults.json"),
             Arguments.of("targets.txt"),
+//            Arguments.of("avelino_alias.txt"),
+//            Arguments.of("jetbrains_merge.json"),
+//            Arguments.of("users.json"),
         )
     }
 
-    @Test
-    fun run() {
-        val file = File("./testrepo")
-        if (file.exists()) {
-            println("IT EXISTS!")
-        }
-        ProcessBuilder("./gradlew",  "-p", "../DependencyGraph", "extractDependencies", "-Pprojectpath=${file.absolutePath}",  "-Pgraphpath='./out/graph.csv'",  "-Ptargetdirectories='./out/targets.txt'")
-            .redirectOutput(Redirect.INHERIT)
-            .redirectError(Redirect.INHERIT)
-            .start()
-            .waitFor(60, TimeUnit.MINUTES)
-        assertTrue(true)
-    }
+//    @Test
+//    fun run() {
+//        val file = File("./testrepo")
+//        if (file.exists()) {
+//            println("IT EXISTS!")
+//        }
+//        ProcessBuilder(
+//            "./gradlew",
+//            "-p",
+//            "../DependencyGraph",
+//            "extractDependencies",
+//            "-Pprojectpath=${file.absolutePath}",
+//            "-Pgraphpath='./out/graph.csv'",
+//            "-Ptargetdirectories='./out/targets.txt'"
+//        )
+//            .redirectOutput(Redirect.INHERIT)
+//            .redirectError(Redirect.INHERIT)
+//            .start()
+//            .waitFor(60, TimeUnit.MINUTES)
+//        assertTrue(true)
+//    }
 
     @ParameterizedTest
     @MethodSource("provideFilenames")
     fun compareResults(filename: String) {
-        val file1 = MainTest::class.java.getResource("/out1/$filename")?.let { File(it.file) }
-        val file2 = MainTest::class.java.getResource("/out2/$filename")?.let { File(it.file) }
-        if (file1 == null || file2 == null) {
-            assertNotNull(file1)
-            assertNotNull(file2)
-            exitProcess(1)
+        println("Evaluating $filename")
+
+        val actualFile = File("$actualPath/$filename")
+        val expectedFile = File("$expectedPath/$filename")
+
+        assertFileExists(actualFile, "Actual")
+        assertFileExists(expectedFile, "Expected")
+
+        when {
+            filename.contains(".json") -> {
+                compareJsonFiles(actualFile, expectedFile)
+            }
+            else -> {
+                comparePlainText(actualFile, expectedFile)
+            }
         }
-        val contents1 = file1.readLines()
-        val contents2 = file2.readLines()
-        assertEquals(contents1.size, contents2.size)
-        val set1 = contents1.toSet()
-        val set2 = contents1.toSet()
-        set2.forEach {
-            assertTrue(it in set1) { "$it not present in model output" }
-        }
-        set2.forEach {
-            assertTrue(it in set1) { "$it not present in model output" }
-        }
+    }
+
+    private fun comparePlainText(actualFile: File, expectedFile: File) {
+        var actualData = actualFile.readLines()
+        var expectedData = expectedFile.readLines()
+        assertEquals(actualData.size, expectedData.size, "Data size is not equal")
+
+        actualData = actualData.sorted()
+        expectedData = expectedData.sorted()
+        assertArrayEquals(actualData.toTypedArray(), expectedData.toTypedArray(), "Content of ${expectedFile.path} and ${actualFile.path} is not equal")
+    }
+
+    private fun compareJsonFiles(actualFile: File, expectedFile: File) {
+        val actualContent = actualFile.readText()
+        val expectedContent = expectedFile.readText()
+
+        assertThatJson(actualContent)
+            .`when`(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(expectedContent)
+            .withFailMessage("Json content is not equal for ${actualFile.path} -> ${expectedFile.path}")
+
     }
 }
