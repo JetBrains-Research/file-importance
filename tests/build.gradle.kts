@@ -75,6 +75,8 @@ tasks.test {
     delete(expectedPath)
     delete(actualPath)
 
+    mkdir("outputs")
+
     copy {
         from("../output")
         into(actualPath)
