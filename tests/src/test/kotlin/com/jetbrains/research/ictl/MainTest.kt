@@ -1,5 +1,8 @@
 package com.jetbrains.research.ictl
 
+import com.jetbrains.research.ictl.Utils.Companion.assertFileExists
+import net.javacrumbs.jsonunit.assertj.assertThatJson
+import net.javacrumbs.jsonunit.core.Option
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
@@ -7,13 +10,6 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.util.*
-import com.jetbrains.research.ictl.Utils.Companion.assertFileExists
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import net.javacrumbs.jsonunit.assertj.assertThatJson
-import net.javacrumbs.jsonunit.core.Option
-import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.CoreMatchers.`is`
 
 class MainTest() {
     companion object {
@@ -47,34 +43,9 @@ class MainTest() {
             Arguments.of("features.csv"),
             Arguments.of("graph.csv"),
             Arguments.of("jetbrainsBFResults.json"),
-            Arguments.of("targets.txt"),
-//            Arguments.of("avelino_alias.txt"),
-//            Arguments.of("jetbrains_merge.json"),
-//            Arguments.of("users.json"),
+            Arguments.of("targets.txt")
         )
     }
-
-//    @Test
-//    fun run() {
-//        val file = File("./testrepo")
-//        if (file.exists()) {
-//            println("IT EXISTS!")
-//        }
-//        ProcessBuilder(
-//            "./gradlew",
-//            "-p",
-//            "../DependencyGraph",
-//            "extractDependencies",
-//            "-Pprojectpath=${file.absolutePath}",
-//            "-Pgraphpath='./out/graph.csv'",
-//            "-Ptargetdirectories='./out/targets.txt'"
-//        )
-//            .redirectOutput(Redirect.INHERIT)
-//            .redirectError(Redirect.INHERIT)
-//            .start()
-//            .waitFor(60, TimeUnit.MINUTES)
-//        assertTrue(true)
-//    }
 
     @ParameterizedTest
     @MethodSource("provideFilenames")
