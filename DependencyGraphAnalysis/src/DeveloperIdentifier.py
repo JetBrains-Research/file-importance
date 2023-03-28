@@ -118,6 +118,7 @@ def read_github_repository(github_token, repository_owner, repository_name):
                 query = query_template.replace('after:"template"', f'after:"{cursor}"')
 
             response = requests.post("https://api.github.com/graphql", headers=headers, json={"query": query})
+            # log(response.text)
             response_json = json.loads(response.text)
             commits = response_json["data"]["repository"]["defaultBranchRef"]["target"]["history"]["edges"]
             if len(commits) == 0:
@@ -176,7 +177,7 @@ def generate_jetbrains_output(clusters, path):
                 if email != "None":
                     emails.add(email)
             emails = [(e, users_data.get_email_count(e)) for e in emails]
-            sorted(emails, key=lambda ec: ec[1])
+            sorted(emails, key=lambda ec: ec[1], reverse=True)
             emails = [ec[0] for ec in emails]
             out += [list(emails)]
 
@@ -191,7 +192,7 @@ def generate_avelino_output(clusters, path):
         names = [n for n in names if n != "None"]
         if len(names) > 1:
             names = [(n, users_data.get_name_count(n)) for n in names]
-            sorted(names, key=lambda ec: ec[1])
+            sorted(names, key=lambda ec: ec[1], reverse=True)
             names = [nc[0] for nc in names]
             first = names[0]
             for n in names:
@@ -219,7 +220,7 @@ def create_users_data(local_info, github_info):
             local_author = local_info[c][0]
             local_committer = local_info[c][1]
             users_data.add_user((local_author.name, local_author.email, None))
-            users_data.add_users((local_committer.name, local_committer.email, None))
+            users_data.add_user((local_committer.name, local_committer.email, None))
 
     return users_data
 
