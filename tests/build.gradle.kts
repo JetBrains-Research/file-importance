@@ -27,7 +27,6 @@ fun log(message: String) {
 tasks.test {
 
     val repoPath = project.property("repo.path") as String
-    val repoOwner = project.property("repo.owner") as String
     val repoName = project.property("repo.name") as String
 
     log("Launch calculation")
@@ -37,7 +36,7 @@ tasks.test {
         errorOutput = System.err
         isIgnoreExitValue = true
         workingDir(File("../").path)
-        commandLine("./test-run.sh", repoPath, repoOwner, repoName)
+        commandLine("./test-run.sh", repoPath)
     }
 
     val actualPath = project.property("outputs.actual") as String

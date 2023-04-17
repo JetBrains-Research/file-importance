@@ -2,16 +2,13 @@
 
 set -e
 
-if [ $# -ne "3" ]; then
-  echo "usage: run <path to local repository> <repository owner> <repository name>"
+if [ $# -ne "1" ]; then
+  echo "usage: run <path to local repository>"
   exit 1
 fi
 
 ROOT_DIRRECTORY="$(pwd)"
 projectPath="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
-repositoryOwner="$2"
-repositoryName="$3"
-# githubToken="$4"
 graphMiner="DependencyGraph"
 graphAnalyzer="DependencyGraphAnalysis"
 BFCalculator="Truck-Factor"
@@ -33,9 +30,6 @@ resultsPath="$outputFolderPath/results.xlsx"
 jetbrainsBFResult="$outputFolderPath/jetbrainsBFResults.json"
 avelinoBFResult="$outputFolderPath/avelinoBFResults.json"
 authorshipPath="$outputFolderPath/authorships.json"
-# jetbrainsMergeOutput="$outputFolderPath/jetbrains_merge.json"
-# avelinoMergeOutput="$outputFolderPath/avelino_alias.txt"
-# usersSavePath="$outputFolderPath/users.json"
 avelinoMergeFilePath="$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/repo_info/alias.txt"
 jetbrainsMergeFilePath="$projectPath/merged_emails.json"
 
@@ -45,23 +39,18 @@ jetbrainsMergeFilePath="$projectPath/merged_emails.json"
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
 pip3 install -r requirements.txt
 python3 ./src/DependencyGraphEvaluator.py -g "$graphFilePath" -i "$graphImagePath" -f "$featuresFilePath"
-# python3 ./src/DeveloperIdentifier.py -g "$githubToken" -o "$repositoryOwner" -n "$repositoryName" -l "$projectPath" -j "$jetbrainsMergeOutput" -a "$avelinoMergeOutput" -u "$usersSavePath"
-# rm -f "$avelinoMergeFilePath" "$jetbrainsMergeFilePath"
-# cp "$avelinoMergeOutput" "$avelinoMergeFilePath"
-# cp "$jetbrainsMergeOutput" "$jetbrainsMergeFilePath"
 
-
-cd "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/scripts";
-./linguist_script.sh "$projectPath"
-./commit_log_script.sh "$projectPath"
-cd ..
+cd "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor"
+rm -f "$avelinoMergeFilePath"
+touch "$avelinoMergeFilePath"
 mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath $featuresFilePath $targetDirectoriesPath $avelinoBFResult"
 
 
 # Jetbrains BF Calculation
 cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
+mv -f "$jetbrainsMergeFilePath" "$jetbrainsMergeFilePath-tmp"
 "./gradlew" --stacktrace sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath" -Pauthorship="$authorshipPath"
-
+mv -f "$jetbrainsMergeFilePath-tmp" "$jetbrainsMergeFilePath"
 
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
 python3 ./src/OutputEvaluation.py -o "$resultsPath" -a "$authorshipPath" -i "$avelinoBFResult" "$jetbrainsBFResult"

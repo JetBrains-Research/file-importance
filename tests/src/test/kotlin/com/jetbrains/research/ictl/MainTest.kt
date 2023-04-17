@@ -37,7 +37,6 @@ class MainTest() {
 
         @JvmStatic
         fun provideFilenames() = listOf(
-            // filename1, filename2
             Arguments.of("authorships.json"),
             Arguments.of("avelinoBFResults.json"),
             Arguments.of("features.csv"),

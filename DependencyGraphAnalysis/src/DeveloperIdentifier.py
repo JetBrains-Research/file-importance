@@ -182,7 +182,7 @@ def generate_jetbrains_output(clusters, path):
             out += [list(emails)]
 
     with open(path, "w") as f:
-        json.dump(out, f)
+        json.dump(out, f, indent=4)
 
 
 def generate_avelino_output(clusters, path):
@@ -243,7 +243,7 @@ def find_matches(users_data):
 def save_clusters(clusters, path):
     with open(path, "w") as f:
         matches = [clusters[c] for c in clusters]
-        json.dump(matches, f)
+        json.dump(matches, f, indent=4)
 
 
 def print_clusters(clusters):

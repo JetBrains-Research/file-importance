@@ -14,6 +14,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven(url = "https://www.jetbrains.com/intellij-repository/releases/")
 }
 
 intellij {
@@ -25,6 +26,7 @@ intellij {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+//    implementation("com.jetbrains.intellij.platform:warmup:221.5921.22")
 }
 
 tasks.test {
@@ -32,7 +34,7 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 application {
@@ -41,10 +43,15 @@ application {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "17"
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "17"
+    }
+
+    compileJava{
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
     }
 
     runIde {
@@ -62,8 +69,9 @@ tasks {
     }
 }
 
-tasks.create<RunIdeTask>("importProject"){
+tasks.register<RunIdeTask>("importProject"){
     val projectpath: String? by project
     args = listOfNotNull("importProject", projectpath)
+//    jvmArgs = listOf("-Xmx8g", "-Djava.awt.headless=true")
     jvmArgs = listOf("-Xmx8g")
 }

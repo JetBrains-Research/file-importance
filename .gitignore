@@ -189,3 +189,4 @@ fabric.properties
 .gradle/
 **/output/
 **/outputs/
+repositories/

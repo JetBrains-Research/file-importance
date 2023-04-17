@@ -66,5 +66,10 @@ class DependencyExtractor(
         getAllPsiFiles().forEach { it.acceptChildren(DumbVisitor) }
     }
 
-    private object DumbVisitor : JavaRecursiveElementVisitor()
+    private object DumbVisitor : JavaRecursiveElementVisitor(){
+        override fun visitElement(element: PsiElement) {
+            element.references.toList()
+            super.visitElement(element)
+        }
+    }
 }
