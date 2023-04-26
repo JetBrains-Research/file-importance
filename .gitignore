@@ -190,3 +190,5 @@ fabric.properties
 **/output/
 **/outputs/
 repositories/
+repos.txt
+**/data/

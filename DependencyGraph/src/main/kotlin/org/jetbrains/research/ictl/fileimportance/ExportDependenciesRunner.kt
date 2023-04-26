@@ -8,6 +8,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.testFramework.closeProjectAsync
+import com.intellij.vcs.log.impl.VcsProjectLog
 import org.jetbrains.research.ictl.csv.CSVFormat
 import kotlin.system.exitProcess
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -36,11 +37,13 @@ class ExportDependenciesRunner : ApplicationStarter {
 
         dumbService.runWhenSmart {
             log("Indexing has finished")
-            try {
-                buildGraph(project, exportDependenciesArgs)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                exitProcess(1)
+            VcsProjectLog.runWhenLogIsReady(project) {
+                try {
+                    buildGraph(project, exportDependenciesArgs)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    exitProcess(1)
+                }
             }
         }
     }
@@ -51,8 +54,8 @@ class ExportDependenciesRunner : ApplicationStarter {
         args: ExportDependenciesArgs
     ) {
         val dependencyExtractors = listOf(
-            DependencyExtractor(project, "java", args.projectPath),
-            DependencyExtractor(project, "kt", args.projectPath)
+//            DependencyExtractor(project, "java", args.projectPath),
+            DependencyExtractor(project, args.projectPath)
         )
 
         TargetExtractor(dependencyExtractors, args.targetDirectories).exportTargetDirectories()

@@ -19,8 +19,19 @@ repositories {
 
 intellij {
     version.set("2022.3.2")
-    type.set("IC")
-    plugins.set(listOfNotNull("java", "Kotlin"))
+    type.set("IU")
+    plugins.set(
+        listOfNotNull(
+            "java",
+            "Kotlin",
+            "org.intellij.scala:2022.3.20",
+            "com.jetbrains.php:223.8617.20",
+            "Pythonid:223.8617.20",
+            "org.jetbrains.plugins.ruby:223.8617.56",
+            "org.jetbrains.plugins.go:223.8617.9",
+            "org.jetbrains.erlang:0.11.1162"
+        )
+    )
 }
 
 dependencies {
@@ -49,7 +60,7 @@ tasks {
         kotlinOptions.jvmTarget = "17"
     }
 
-    compileJava{
+    compileJava {
         sourceCompatibility = "17"
         targetCompatibility = "17"
     }
@@ -69,7 +80,7 @@ tasks {
     }
 }
 
-tasks.register<RunIdeTask>("importProject"){
+tasks.register<RunIdeTask>("importProject") {
     val projectpath: String? by project
     args = listOfNotNull("importProject", projectpath)
 //    jvmArgs = listOf("-Xmx8g", "-Djava.awt.headless=true")

@@ -69,20 +69,7 @@ class ImportProjectRunner : ApplicationStarter {
         dumbService.runWhenSmart {
             log("Indexing is finished")
 
-            val dependencyExtractors = listOf(
-                DependencyExtractor(project, "java", projectPath),
-                DependencyExtractor(project, "kt", projectPath)
-            )
-
-            
-
-
             ApplicationManager.getApplication().runReadAction {
-                val currentTimestamp = System.currentTimeMillis()
-                dependencyExtractors.forEach { it.prepare() }
-                val duration = System.currentTimeMillis() - currentTimestamp
-
-
                 log("Closing the project")
 
                 Timer().schedule(object: TimerTask(){
@@ -92,7 +79,7 @@ class ImportProjectRunner : ApplicationStarter {
 
                         }
                     }
-                }, 300000)
+                }, 3000000)
             }
         }
     }
