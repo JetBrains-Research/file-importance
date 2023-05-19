@@ -34,8 +34,9 @@ avelinoMergeOutput="$projectPath/avelino_alias.txt"
 usersSavePath="$outputFolderPath/users.json"
 avelinoMergeFilePath="$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/repo_info/alias.txt"
 jetbrainsMergeFilePath="$projectPath/merged_emails.json"
+specialsFilePath="$projectPath/specials.txt"
 
-"./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Ptargetdirectories="$targetDirectoriesPath"
+"./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Ptargetdirectories="$targetDirectoriesPath" -Pspecials="$specialsFilePath"
 
 
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
@@ -56,5 +57,5 @@ cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
 
 #Generate resuts
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
-python3 ./src/OutputEvaluation.py -o "$resultsPath" -a "$authorshipPath" -i "$avelinoBFResult" "$jetbrainsBFResult"
+python3 ./src/OutputEvaluation.py -o "$resultsPath" -a "$authorshipPath" -s "$specialsFilePath" -i "$avelinoBFResult" "$jetbrainsBFResult"
 
