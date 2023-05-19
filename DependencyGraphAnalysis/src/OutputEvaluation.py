@@ -1,7 +1,10 @@
 import argparse
 import json
 import sys
+
+import numpy as np
 import xlsxwriter
+from utils import write_merged
 
 
 def log(msg):
@@ -23,9 +26,11 @@ def get_args():
     parser.add_argument("-a", "--authorship_file", type=str, help="authorship file path", required=True)
     parser.add_argument("-i", "--input_files", type=str, nargs='+', help="bus factor information input files",
                         required=True)
+    parser.add_argument("-s", "--specials_file", type=str, help="special paths file",
+                        required=True)
 
     args = parser.parse_args()
-    return args.output_file, args.authorship_file, args.input_files
+    return args.output_file, args.authorship_file, args.input_files, args.specials_file
 
 
 def load_inputs(input_files):
@@ -84,7 +89,7 @@ def calculate_disagreement(data):
 
 
 def write_authorship_info(workbook, data, authorship_info):
-    worksheet = workbook.add_worksheet()
+    worksheet = workbook.add_worksheet("Survey Suggestions")
 
     for i in range(2, 5):
         worksheet.set_column(i, i, 20)
@@ -161,7 +166,7 @@ def write_authorship_info(workbook, data, authorship_info):
 
 
 def write_BF_Info(workbook, data):
-    worksheet = workbook.add_worksheet()
+    worksheet = workbook.add_worksheet("All")
 
     max_path_length = max([len(d["path"]) for d in data])
     max_indicator_length = max([len(i["significanceIndicator"]) for i in data[0]["info"]])
@@ -253,15 +258,93 @@ def write_BF_Info(workbook, data):
         worksheet.merge_range(path_row, 1, row - 1, 1, "%.2f" % d["disagreement"], centered_text)
 
 
+def get_ordered_BF_Info(order, info):
+    results = []
+    for o in order:
+        i = next(i for i in info if i["significanceIndicator"] == o[0])
+        results += [i]
+
+    return results
+
+
+def write_specials_info(workbook, data, specials_file):
+    info_order = [
+        ("jet-jetbrains", "jet"),
+        ("jet-pageRank", "jet-pg"),
+        ("jet-degreeCentrality", "jet-dc"),
+        ("jet-inDegreeCentrality", "jet-idc"),
+        ("jet-outDegreeCentrality", "jet-odc"),
+        ("jet-betweennessCentrality", "jet-bc"),
+        ("ave-Avelino", "ave"),
+        ("ave-pageRank", "ave-pg"),
+        ("ave-degreeCentrality", "ave-dc"),
+        ("ave-inDegreeCentrality", "ave-idc"),
+        ("ave-outDegreeCentrality", "ave-odc"),
+        ("ave-betweennessCentrality", "ave-bc")
+    ]
+
+    centered_text = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'font_size': 10})
+
+    left_text_format = workbook.add_format({
+        'align': 'left',
+        'valign': 'vcenter',
+        'font_size': 10})
+
+    header_format = workbook.add_format({
+        'bold': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+        'fg_color': '000080',
+        'font_color': 'white'})
+
+    specials = [""] + np.loadtxt(specials_file, comments="#", dtype='str').tolist()
+    specials_data = [d for d in data if d["path"] in specials]
+
+    worksheet = workbook.add_worksheet("Specials")
+    worksheet.set_column(0, 0, 40)
+    worksheet.set_column(len(info_order) + 1, len(info_order) + 1, 30)
+
+    worksheet.write(0, 0, 'root', header_format)
+    worksheet.write(0, len(info_order) + 1, 'developers', header_format)
+    worksheet.set_row(0, 40)
+
+    for i, o in enumerate(info_order):
+        worksheet.write(0, i+1, o[1], header_format)
+
+    row = 1
+    for d in specials_data:
+        first_row = row
+        info = get_ordered_BF_Info(info_order, d["info"])
+        emails = list(set([d["email"] for i in info for d in i["developers"]]))
+        if len(emails) > 0:
+            for e in emails:
+                worksheet.write(row, len(info) + 1, e, left_text_format)
+                row += 1
+        else:
+            row += 1
+
+        path = d["path"]
+        if path == "":
+            path = "root"
+
+        write_merged(worksheet, first_row, row - 1, 0, path, left_text_format)
+        for i, info in enumerate(info):
+            write_merged(worksheet, first_row, row - 1, i + 1, info["busFactor"], centered_text)
+
+
 if __name__ == "__main__":
     # probably missing logging here
-    output_file, authorship_file, input_files = get_args()
+    output_file, authorship_file, input_files, specials_file = get_args()
     inputs = load_inputs(input_files)
     authorship_info = load_authorship_info(authorship_file)
     data = merge_inputs(inputs)
     data = calculate_disagreement(data)
 
     workbook = xlsxwriter.Workbook(output_file)
+    write_specials_info(workbook, data, specials_file)
     write_BF_Info(workbook, data)
     write_authorship_info(workbook, data, authorship_info)
     workbook.close()

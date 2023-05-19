@@ -7,6 +7,32 @@ from Levenshtein import distance as LevDist
 import string
 from tqdm import tqdm
 from collections import defaultdict
+from datetime import datetime
+
+
+def find_latest_output(output_folders, project_name):
+    folders = [o for o in output_folders if o[:-17] == project_name]
+    if len(folders) == 0:
+        print(f"Can not find output for {project_name}")
+        return None
+
+    dates = [datetime.strptime(f[-16:], '%Y-%m-%d-%H:%M') for f in folders]
+    latest_output_date = max(dates)
+    latest_output_index = dates.index(latest_output_date)
+    return folders[latest_output_index]
+
+def write_merged(sheet, first_row, last_row, column, value, style=None):
+    if last_row - first_row == 0:
+        if style is not None:
+            sheet.write(first_row, column, value, style)
+        else:
+            sheet.write(first_row, column, value)
+    else:
+        if style is not None:
+            sheet.merge_range(first_row, column, last_row, column, value, style)
+        else:
+            sheet.merge_range(first_row, column, last_row, column, value)
+
 
 
 def remove_punctuation(name):

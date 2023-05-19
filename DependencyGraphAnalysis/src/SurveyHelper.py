@@ -3,9 +3,9 @@ import os
 
 import pandas as pd
 from os.path import isfile
-from datetime import datetime
-from functools import reduce
 import numpy as np
+from utils import write_merged, find_latest_output
+from datetime import datetime
 
 import xlsxwriter
 
@@ -33,23 +33,6 @@ def add_to_dict(dictionary, key, value):
     dictionary[key] += [value]
 
 
-def find_latest_output(output_folders, project_name):
-    folders = [o for o in output_folders if o[:-17] == project_name]
-    if len(folders) == 0:
-        print(f"Can not find output for {project_name}")
-        return None
-
-    dates = [datetime.strptime(f[-16:], '%Y-%m-%d-%H:%M') for f in folders]
-    latest_output_date = max(dates)
-    latest_output_index = dates.index(latest_output_date)
-    return folders[latest_output_index]
-
-
-def write_merged(sheet, first_row, last_row, column, value):
-    if last_row - first_row <= 1:
-        sheet.write(first_row, column, value)
-    else:
-        sheet.merge_range(first_row, column, last_row, column, value)
 
 
 allAuthors = pd.read_csv("../data/author_emails_new.csv")
