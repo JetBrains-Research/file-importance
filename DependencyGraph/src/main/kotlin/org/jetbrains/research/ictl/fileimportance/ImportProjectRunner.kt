@@ -37,7 +37,7 @@ class ImportProjectRunner : ApplicationStarter {
         log(Utils.BANNER)
 
         val projectPath = Path(args[1])
-        if (!projectPath.exists()) {
+        if (!projectPath.toFile().exists()) {
             log("Path $projectPath does not exist")
             exitProcess(1)
         }
@@ -69,18 +69,18 @@ class ImportProjectRunner : ApplicationStarter {
         dumbService.runWhenSmart {
             log("Indexing is finished")
 
-            ApplicationManager.getApplication().runReadAction {
-                log("Closing the project")
-
-                Timer().schedule(object: TimerTask(){
-                    override fun run() {
-                        ApplicationManager.getApplication().invokeLaterOnWriteThread(){
-                            ProjectManager.getInstance().closeAndDispose(project)
-
-                        }
-                    }
-                }, 3000000)
-            }
+//            ApplicationManager.getApplication().runReadAction {
+//                log("Closing the project")
+//
+//                Timer().schedule(object: TimerTask(){
+//                    override fun run() {
+//                        ApplicationManager.getApplication().invokeLaterOnWriteThread(){
+//                            ProjectManager.getInstance().closeAndDispose(project)
+//
+//                        }
+//                    }
+//                }, 300000)
+//            }
         }
     }
 }

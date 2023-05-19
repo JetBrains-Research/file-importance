@@ -20,31 +20,38 @@ class ExportDependenciesRunner : ApplicationStarter {
 
     @OptIn(ExperimentalSerializationApi::class)
     override fun main(args: List<String>) {
-        log(Utils.BANNER)
-
-        val exportDependenciesArgs = ExportDependenciesArgs.parse(args)
+        try {
 
 
-        val project = exitOnNull(ProjectUtil.openOrImport(exportDependenciesArgs.projectPath)) {
-            "Could not open the project ${exportDependenciesArgs.projectPath}"
-        }
+            log(Utils.BANNER)
 
-        log("Indexing project ${project.name}")
+            val exportDependenciesArgs = ExportDependenciesArgs.parse(args)
 
-        val dumbService = exitOnNull(project.getService(DumbService::class.java)) {
-            "Could not get DumbService"
-        }
+            log("Importing the project")
+            val project = exitOnNull(ProjectUtil.openOrImport(exportDependenciesArgs.projectPath)) {
+                "Could not open the project ${exportDependenciesArgs.projectPath}"
+            }
 
-        dumbService.runWhenSmart {
-            log("Indexing has finished")
-            VcsProjectLog.runWhenLogIsReady(project) {
-                try {
-                    buildGraph(project, exportDependenciesArgs)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    exitProcess(1)
+            log("Indexing project ${project.name}")
+
+            val dumbService = exitOnNull(project.getService(DumbService::class.java)) {
+                "Could not get DumbService"
+            }
+
+            dumbService.runWhenSmart {
+                log("Indexing has finished")
+                VcsProjectLog.runWhenLogIsReady(project) {
+                    try {
+                        buildGraph(project, exportDependenciesArgs)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        exitProcess(1)
+                    }
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            exitProcess(1)
         }
     }
 
@@ -58,7 +65,7 @@ class ExportDependenciesRunner : ApplicationStarter {
             DependencyExtractor(project, args.projectPath)
         )
 
-        TargetExtractor(dependencyExtractors, args.targetDirectories).exportTargetDirectories()
+        TargetExtractor(dependencyExtractors, args.targetDirectories, args.specialsFile).exportTargetDirectories()
 
         dependencyExtractors.forEach { it.prepare() }
 

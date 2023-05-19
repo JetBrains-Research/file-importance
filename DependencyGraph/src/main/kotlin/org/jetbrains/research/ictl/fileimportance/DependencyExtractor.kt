@@ -1,27 +1,11 @@
 package org.jetbrains.research.ictl.fileimportance
 
-import com.intellij.ide.impl.TrustedProjectsStatistics
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vcs.ProjectLevelVcsManager
-import com.intellij.openapi.vcs.changes.ui.SelectFilesDialog.VirtualFileList
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VirtualFileFilter
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.psi.JavaRecursiveElementVisitor
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiRecursiveElementVisitor
-import com.intellij.psi.search.FilenameIndex
-import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.refactoring.suggested.startOffset
-import org.apache.commons.net.util.TrustManagerUtils
+import com.intellij.psi.*
 import java.nio.file.Path
-import javax.net.ssl.TrustManager
 
 class DependencyExtractor(
     val project: Project,
@@ -36,7 +20,7 @@ class DependencyExtractor(
                 try {
                     psiFile.acceptChildren(this@DependencyExtractor)
                 } catch (e: Exception) {
-                    log(e.message)
+//                    log(e.message)
                 } finally {
                     yieldAll(edgesBuffer)
                     edgesBuffer.clear()
@@ -45,19 +29,26 @@ class DependencyExtractor(
     }
 
     override fun visitElement(element: PsiElement) {
-        element
-            .references
-            .filterNotNull()
-            .forEach {
-                val resolve = it.resolve()
-                if (resolve != null && psiManager.isInProject(resolve) && resolve.containingFile != null &&
-                    !it.element.containingFile.isEquivalentTo(resolve.containingFile)
-                ) {
-                    edgesBuffer.add(DependencyEdge(element.getFileName(), resolve.getFileName()))
+        try {
+            element
+                .references
+                .filterNotNull()
+                .forEach {
+                    val resolve = it.resolve()
+                    if (resolve != null && psiManager.isInProject(resolve) && resolve.containingFile != null &&
+                        !it.element.containingFile.isEquivalentTo(resolve.containingFile)
+                    ) {
+                        edgesBuffer.add(DependencyEdge(element.getFileName(), resolve.getFileName()))
+                    }
                 }
-            }
 
-        super.visitElement(element)
+            super.visitElement(element)
+        }catch (e: Exception){
+//            log("Error: ${e.message}")
+//            e.printStackTrace()
+        }
+
+
     }
 
     private fun PsiElement.getFileName() = containingFile?.virtualFile?.getFileName() ?: ""
@@ -73,9 +64,10 @@ class DependencyExtractor(
 
         fileIndex.iterateContent {
 
-            if (!it.isDirectory && !fileIndex.isInLibrary(it) && !vcsManager.isIgnored(it)) {
+            if (!it.isDirectory && !fileIndex.isInLibrary(it) && vcsManager.isFileInContent(it) && !it.name.contains(".gradle.kts")) {
                 val file = psiManager.findFile(it)
                 // yieldNotNull raises java.lang.ClassNotFoundException: org.jetbrains.kotlin.utils.CollectionsKt
+
                 file?.let { files.add(file) }
             }
 
@@ -86,13 +78,27 @@ class DependencyExtractor(
     }
 
     fun prepare() {
-        getAllPsiFiles().forEach { it.acceptChildren(DumbVisitor) }
+        getAllPsiFiles().forEach {
+            try {
+//                log(it.getFileName())
+                it.acceptChildren(DumbVisitor)
+            }catch (e: Exception){
+
+            }
+
+        }
     }
 
     private object DumbVisitor : JavaRecursiveElementVisitor(){
         override fun visitElement(element: PsiElement) {
-            element.references.toList()
-            super.visitElement(element)
+            try {
+                element.references.toList()
+
+                super.visitElement(element)
+            }catch (e: Exception){
+//                log("Error: ${e.message}")
+//                e.printStackTrace()
+            }
         }
     }
 }

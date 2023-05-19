@@ -19,17 +19,19 @@ repositories {
 
 intellij {
     version.set("2022.3.2")
+//    version.set("223.8836.41")
+//    version.set("2023.1.1")
     type.set("IU")
     plugins.set(
         listOfNotNull(
             "java",
             "Kotlin",
             "org.intellij.scala:2022.3.20",
-            "com.jetbrains.php:223.8617.20",
+//            "com.jetbrains.php:223.8617.20",
             "Pythonid:223.8617.20",
-            "org.jetbrains.plugins.ruby:223.8617.56",
-            "org.jetbrains.plugins.go:223.8617.9",
-            "org.jetbrains.erlang:0.11.1162"
+//            "org.jetbrains.plugins.ruby:223.8617.56",
+//            "org.jetbrains.plugins.go:223.8617.9",
+//            "org.jetbrains.erlang:0.11.1162"
         )
     )
 }
@@ -70,9 +72,10 @@ tasks {
         val projectpath: String? by project
         val graphpath: String? by project
         val targetdirectories: String? by project
-        args = listOfNotNull("extractDependencies", deplevel, projectpath, graphpath, targetdirectories)
+        val specials: String? by project
+        args = listOfNotNull("extractDependencies", deplevel, projectpath, graphpath, targetdirectories, specials)
         jvmArgs = listOf("-Xmx8g", "-Djava.awt.headless=true")
-//        jvmArgs = listOf("-Xmx8g")
+//        jvmArgs = listOf("-Xmx12g")
     }
 
     register("extractDependencies") {

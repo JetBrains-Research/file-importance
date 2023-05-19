@@ -1,13 +1,17 @@
 package org.jetbrains.research.ictl.fileimportance
 
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.project.modules
 import com.intellij.openapi.vfs.VirtualFile
+import org.jetbrains.kotlin.idea.base.facet.stableName
+import org.jetbrains.kotlin.idea.base.projectStructure.externalProjectPath
 import java.io.File
 import java.nio.file.Path
 
 class TargetExtractor(
     private val dependencyExtractors: List<DependencyExtractor>,
-    private val targetDirectories: File
+    private val targetDirectoriesFile: File,
+    private val specialsFile: File,
 ) {
     fun extract(): List<String>? {
         log("exporting target paths")
@@ -68,14 +72,23 @@ class TargetExtractor(
     }
 
     fun exportTargetDirectories() {
+        val specials = extractModules()
         val targets = extract() ?: return
 
         log("writing target directories")
-        targetDirectories
+        targetDirectoriesFile
             .bufferedWriter()
             .use { writer ->
                 targets.forEach { writer.appendLine(it) }
             }
+    }
+
+    private fun extractModules(): List<String> {
+        return dependencyExtractors
+            .first()
+            .project
+            .modules
+            .mapNotNull { it.name }
     }
 
     private fun VirtualFile.getFileName(projectPath: Path) = path.replace("${projectPath}/", "")
