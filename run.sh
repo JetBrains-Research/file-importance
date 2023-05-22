@@ -18,7 +18,7 @@ outputFolderName="$outputs/$(basename $projectPath)-$(date '+%Y-%m-%d-%H:%M')"
 # outputFolderName="output"
 # rm -rf "$outputFolderName" 
 mkdir -p "$outputs"
-mkdir "$outputFolderName"
+mkdir -p "$outputFolderName"
 
 outputFolderPath="$ROOT_DIRRECTORY/$outputFolderName"
 
