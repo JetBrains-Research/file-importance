@@ -1,0 +1,5 @@
+
+.idea
+out/production/reference-test-java/org/jetbrains/research/ictl/fileimportance/test
+src/org/jetbrains/research/ictl/fileimportance/test
+.idea/codeStyles
