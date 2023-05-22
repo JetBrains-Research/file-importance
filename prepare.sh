@@ -2,8 +2,8 @@
 
 set -e
 
-if [ $# -ne "3" ]; then
-  echo "usage: run <repository owner> <repository name> <github token>"
+if [ $# -ne "4" ]; then
+  echo "usage: run <repository owner> <repository name> <github token> <reset head to YYYY-MM-DD>"
   exit 1
 fi
 
@@ -11,6 +11,7 @@ ROOT_DIRRECTORY="$(pwd)"
 repositoryOwner="$1"
 repositoryName="$2"
 githubToken="$3"
+resetDate="$4"
 
 #Folder names
 graphMiner="DependencyGraph"
@@ -32,9 +33,9 @@ then
   git clone "https://github.com/$repositoryOwner/$repositoryName.git" "$projectPath"
 fi
 
-#Reset head to the last commit of 2022
+#Reset head to specific date
 cd "$projectPath"
-lastCommitHash=$(git log --before="2023-01-01" --pretty=format:'%H' -n 1)
+lastCommitHash=$(git log --before="$resetDate" --pretty=format:'%H' -n 1)
 git reset --hard "$lastCommitHash"
 
 #Generate Avelino files
@@ -49,10 +50,19 @@ then
   python3 ./src/DeveloperIdentifier.py -g "$githubToken" -o "$repositoryOwner" -n "$repositoryName" -l "$projectPath" -j "$jetbrainsMergeOutput" -a "$avelinoMergeOutput" -u "$usersSavePath"
 fi
 
+#Install required python libraries
+cd "$ROOT_DIRRECTORY/$graphAnalyzer"
+pip3 install -r requirements.txt
 
-#Prepare projects for headless mode
-cd "$ROOT_DIRRECTORY"
-"./$graphMiner/gradlew" -p "./$graphMiner" importProject -Pprojectpath="$projectPath"
 
-cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
-"./gradlew" --stacktrace importProject -Pprj="$projectPath"
+#Prepare project for headless mode
+cd "$ROOT_DIRRECTORY/$graphMiner"
+"./gradlew" --stacktrace importProject -Pprojectpath="$projectPath"
+
+if [ -d "$ROOT_DIRRECTORY/$jetbrainsBFCalculator" ] 
+then
+  cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
+  "./gradlew" --stacktrace importProject -Pprj="$projectPath"
+else
+  echo "Can not find JetBrains plugin"
+fi

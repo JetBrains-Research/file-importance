@@ -48,7 +48,7 @@ tasks.test {
     mkdir("outputs")
 
     copy {
-        from("../output")
+        from("../output-test")
         into(actualPath)
     }
 

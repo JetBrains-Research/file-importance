@@ -36,24 +36,35 @@ avelinoMergeFilePath="$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor/repo_info/al
 jetbrainsMergeFilePath="$projectPath/merged_emails.json"
 specialsFilePath="$projectPath/specials.txt"
 
-"./$graphMiner/gradlew" -p "./$graphMiner" extractDependencies -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Ptargetdirectories="$targetDirectoriesPath" -Pspecials="$specialsFilePath"
+#Extract dependency graph
+cd "$ROOT_DIRRECTORY/$graphMiner"
+"./gradlew" extractDependencies -Pprojectpath="$projectPath" -Pgraphpath="$graphFilePath" -Ptargetdirectories="$targetDirectoriesPath" -Pspecials="$specialsFilePath"
 
-
+#Generate feature vector
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
-pip3 install -r requirements.txt
 python3 ./src/DependencyGraphEvaluator.py -g "$graphFilePath" -i "$graphImagePath" -f "$featuresFilePath"
 
 
 #Run avelino's tool
 cd "$ROOT_DIRRECTORY/$BFCalculator/gittruckfactor"
-rm -f "$avelinoMergeFilePath" "$jetbrainsMergeFilePath"
-cp "$avelinoMergeOutput" "$avelinoMergeFilePath"
+rm -f "$avelinoMergeFilePath"
+if [ -f "$avelinoMergeOutput" ]
+then
+  cp "$avelinoMergeOutput" "$avelinoMergeFilePath"
+else
+  touch "$avelinoMergeFilePath"
+fi
 mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$projectPath $featuresFilePath $targetDirectoriesPath $avelinoBFResult"
 
 
 # Jetbrains BF Calculation
-cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
-"./gradlew" --stacktrace sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath" -Pauthorship="$authorshipPath"
+if [ -d "$ROOT_DIRRECTORY/$jetbrainsBFCalculator" ] 
+then
+  cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
+  "./gradlew" --stacktrace sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath" -Pauthorship="$authorshipPath"
+else
+  echo "Can not find JetBrains plugin"
+fi
 
 #Generate resuts
 cd "$ROOT_DIRRECTORY/$graphAnalyzer"
