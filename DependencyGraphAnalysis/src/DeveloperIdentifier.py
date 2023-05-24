@@ -9,7 +9,7 @@ import pandas as pd
 import requests
 from pydriller import Repository
 
-from utils import get_clusters
+from src.utils import get_clusters
 
 
 def log(msg):

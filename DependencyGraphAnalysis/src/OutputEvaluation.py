@@ -5,7 +5,7 @@ import sys
 
 import numpy as np
 import xlsxwriter
-from utils import write_merged
+from src.utils import write_merged
 
 
 def log(msg):
