@@ -4,20 +4,20 @@ BFSig is a Bus Factor(BF) estimator. The current version of BFSig is optimized t
 BFSig is sponsered by JetBrains Research and Bilkent University.
 
 ## Description
-BFSig is a mutation of state-of-the-art BF estimators to wight the influence of different files according to their topological significance extracted from the project's dependency graph. In addition to the whole project, BFSig evaluates BF information for subfolders of a given repository.
+BFSig is a mutation of state-of-the-art BF estimators to weight the influence of different files according to their topological significance extracted from the project's dependency graph. In addition to the whole project, BFSig evaluates BF information for subfolders of a given repository.
 
 BFSig utilizes IntelliJ IDEA for dependency graph extraction and NetworkX to evaluate PageRank, In-/Out-/All-Degree, and Betweenness centralities for files in the extracted graph.
 
-Currently, BFSig uses two baseline tools provided by [Avelino et al.](https://github.com/aserg-ufmg/Truck-Factor) (ABF) and [Jabrayilzade et al.](https://dl.acm.org/doi/abs/10.1145/3510457.3513082) (JBF). Both tools are added as submodlues to this repository. However, the JBF is not publicly available and is licensed to JetBrains. To access JBF's source code, contact [vovak](https://github.com/vovak).
+Currently, BFSig uses two baseline tools provided by [Avelino et al.](https://github.com/aserg-ufmg/Truck-Factor) (ABF) and [Jabrayilzade et al.](https://dl.acm.org/doi/abs/10.1145/3510457.3513082) (JBF). Both tools are added as submodules to this repository. However, the JBF is not publicly available and is licensed to JetBrains. To access JBF's source code, contact [vovak](https://github.com/vovak).
 
 
 ## Structure
 1. ***DependencyGraph:*** IntelliJ plugin to mine all references between files and export Dependency graph.
-1. ***DependencyGraphAnalysis:*** Python codes to evaluate file's significance scores. This folder contains many helper scripts to merge authors, aggregate results, automate survey generationa and so on.
+1. ***DependencyGraphAnalysis:*** Python codes to evaluate file's significance scores. This folder contains many helper scripts to merge authors, aggregate results, automate survey generation and so on.
 1. ***ABF:*** Modified tool provided by Avelino.
 1. ***JBF:*** Modified tool provided by Jabrayilzade.
 1. ***Evaluations:*** This folder contains an Excel sheet which compares the quality of BFSig estimates with the state-of-the-art methods. Besides you can find generated results for several projects under this folder.
-1. ***tests:*** This folder containts a kotlin test project, which evaluate the consistancy of the results with previously generated spces.
+1. ***tests:*** This folder contains a kotlin test project, which evaluate the consistency of the results with previously generated spces.
 1. ***SampleProjects*** Seven sample projects which has been used to check the validity of generated dependency graph.
 1. ***SampleOutputs*** Few sample outputs are included to provide insights about the structure of generated outputs.
 
@@ -30,10 +30,10 @@ To run the evaluation over your repository follow bellow steps:
 ### Requirements
 - **JDK 11+** (17 is suggested)
 - **Python 3.6+** (3.10 is suggested)
-- Any unixed based shell. Automations are provided as **bash** scripts however you can run BFSig manually
+- Any unix based shell. Automation is provided as **bash** scripts however you can run BFSig manually
 - Any tool to open **xlsx** files such as Microsoft Excel, LibreOffice Calc, or Google Sheet
 
-### Improting your project
+### Importing your project
 To run an evaluation of your project, you need to import the project into the IntelliJ instance used by BFSig and let it index your whole project. `prepare.sh` and `prepare-path.sh` help you to do this step. 
 
 After the repository is imported, manual modification might be required to import the project and corresponding modules fully. You might need to set the correct SDK and reload the project based on your parent build script. It automatically resolves all dependencies specified in the maven or gradle configuration. Still, if the repository contains Python, Javascript, or any other programming language, you must manually install the required dependencies for a complete evaluation.
@@ -63,7 +63,7 @@ To run `prepare.sh` you need to provide following parameters:
 3. ***Github Token:*** A "Personal GitHub Access Token" is required to start querying the repository's contributors to identify duplicated ones. Look [here](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) for step-by-step guide to generate personal access token.
 4. ***Reset Date:*** You should specify a date on which the script will reset the head of the branch to the latest commit before the specified date. The date should be in *YYYY-MM-DD* format. If you want to run the evaluation for the latest repository version, set the date in the future.
 
-#### Manual Prepration
+#### Manual Preparation
 If your repository is not hosted on GitHub or you can not use full preparation for any reason, you can use `prepare-path.sh`. For instance it should be used to prepare sample projects. Following is an example of how to prepare `reference-test-mixed` project:
 
 ```
@@ -72,16 +72,16 @@ If your repository is not hosted on GitHub or you can not use full preparation f
 To run `prepare-path.sh` you need to provide the path to your repository on your local file system. Afterward, the script will open and import the following path into IntelliJ (You can provide relative path).
 
 ### Run Evaluation
-To run the evaluation you can use `run.sh` which will launch the evaluation pipeline and place the results under `outputs` folder with `<reponame>-<timestamp>` format. Following is an example of how to luanch evaluation pipeline:
+To run the evaluation you can use `run.sh` which will launch the evaluation pipeline and place the results under `outputs` folder with `<reponame>-<timestamp>` format. Following is an example of how to launch evaluation pipeline:
 
 ```
 ./run.sh SampleProjects/reference-test-java
 ```
 
 If the execution finishes without error, the following files will be available in the output folder:
-1. ***results.xlsx:*** An excel sheet which contains agreegated results for all estimators variants.
+1. ***results.xlsx:*** An excel sheet which contains aggregated results for all estimators variants.
 1. ***graph.csv:*** Dependency graph of evaluated projects.
-1. ***features.csv:*** Files' feature verctor, consisting of significance scores according to graph metrics BFSig evaluates.
+1. ***features.csv:*** Files' feature vector, consisting of significance scores according to graph metrics BFSig evaluates.
 1. ***targets.txt:*** List of subfolders within the project to evaluate the BF.
 1. ***avelinoBFResults.json:*** Results produced by ABF.
 1. ***jetbrainsBFResults.json:*** Results produced by JBF.
@@ -113,7 +113,7 @@ To run BFSig over repositories containing programming languages other than Java 
 Furthermore, you can change the product type from IntelliJ to other JetBrains products, such as CLion. Look [here](https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html) for more details about available products and configurations.
 
 ### Tests
-You can use the automated test under the `tests` folder to test if you have set up BFSig correctly. There are several specs included for sample projects. In addition, there is a spec for [sprig cloud alibab](https://github.com/alibaba/spring-cloud-alibaba) with the last commit of 2022. Look into `tests/specs` folder to check all available specs.
+You can use the automated test under the `tests` folder to test if you have set up BFSig correctly. There are several specs included for sample projects. In addition, there is a spec for [sprig cloud alibaba](https://github.com/alibaba/spring-cloud-alibaba) with the last commit of 2022. Look into `tests/specs` folder to check all available specs.
 
 To run the tests first make sure to prepare the target project. Then configure the project name and path in `gradle.properties` under `tests` folder
 
