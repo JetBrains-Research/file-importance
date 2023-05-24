@@ -1,0 +1,15 @@
+
+.idea
+src/main
+src
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test
+.idea/codeStyles
+target/classes/META-INF
+src/main/resources
+target
+target/classes
+src/test
+src/test/resources
+target/generated-sources/annotations
+target/classes/org/jetbrains/research/ictl/fileimportance/test
+src/test/kotlin

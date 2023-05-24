@@ -1,0 +1,14 @@
+
+.idea
+src/main
+src
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test
+.idea/libraries
+.idea/codeStyles
+src/main/resources
+src/test
+src/test/resources
+out/production/reference-test-mixed
+out/production/reference-test-mixed/org/jetbrains/research/ictl/fileimportance/test
+out/production/reference-test-mixed/META-INF
+src/test/kotlin

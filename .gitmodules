@@ -1,3 +1,6 @@
 [submodule "Truck-Factor"]
-	path = Truck-Factor
+	path = ABF
 	url = git@github.com:vharatian/Truck-Factor.git
+[submodule "risky-patterns-idea"]
+	path = JBF
+	url = ssh://git@git.jetbrains.team/pan/risky-patterns-idea.git

@@ -1,0 +1,11 @@
+
+.idea
+src/main/java/org/jetbrains/research/ictl/fileimportance/test
+src/main
+src
+.idea/codeStyles
+src/test/java
+src/main/resources
+target/generated-sources/annotations
+target/classes/org/jetbrains/research/ictl/fileimportance/test
+target

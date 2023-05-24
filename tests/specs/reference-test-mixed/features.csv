@@ -1,0 +1,16 @@
+,pageRank,degreeCentrality,inDegreeCentrality,outDegreeCentrality,betweennessCentrality
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/Main.kt,0.07226113207932867,0.5,0.07142857142857142,0.42857142857142855,0.06043956043956045
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/IKtCalculator.kt,0.11532135632543197,0.21428571428571427,0.21428571428571427,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/CalculatorScript.kt,0.05069082730361614,0.07142857142857142,0.07142857142857142,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/JavaAnonymousCalc.java,0.05069082730361614,0.14285714285714285,0.07142857142857142,0.07142857142857142,0.005494505494505495
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/JavaLambdaCalculator.java,0.06092773073642591,0.14285714285714285,0.14285714285714285,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/KtUtils.kt,0.07223433697755477,0.14285714285714285,0.14285714285714285,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/TestCalculatorImpl.kt,0.05069082730361614,0.21428571428571427,0.07142857142857142,0.14285714285714285,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/JavaMain.java,0.07226113207932867,0.5,0.07142857142857142,0.42857142857142855,0.06043956043956045
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/IJavaCalculator.java,0.1368648659993706,0.21428571428571427,0.21428571428571427,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/CalculatorImpl.java,0.05069082730361614,0.14285714285714285,0.07142857142857142,0.07142857142857142,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/JavaUtils.java,0.05069082730361614,0.07142857142857142,0.07142857142857142,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/KtAnonymousCalculator.kt,0.05069082730361614,0.14285714285714285,0.07142857142857142,0.07142857142857142,0.005494505494505495
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/KtLambdaCalculator.kt,0.05069082730361614,0.07142857142857142,0.07142857142857142,0.0,0.0
+.idea/.gitignore,0.040453923870806374,0.07142857142857142,0.0,0.07142857142857142,0.0
+.idea/workspace.xml,0.07483973080643991,0.21428571428571427,0.07142857142857142,0.14285714285714285,0.07142857142857144
