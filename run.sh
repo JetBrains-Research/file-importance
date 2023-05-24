@@ -11,8 +11,8 @@ ROOT_DIRRECTORY="$(pwd)"
 projectPath="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 graphMiner="DependencyGraph"
 graphAnalyzer="DependencyGraphAnalysis"
-BFCalculator="Truck-Factor"
-jetbrainsBFCalculator="risky-patterns-idea"
+BFCalculator="ABF"
+jetbrainsBFCalculator="JBF"
 outputs="outputs"
 outputFolderName="$outputs/$(basename $projectPath)-$(date '+%Y-%m-%d-%H:%M')"
 # outputFolderName="output"
@@ -58,9 +58,9 @@ mvn package exec:java -Dexec.mainClass="aserg.gtf.GitTruckFactor" -Dexec.args="$
 
 
 # Jetbrains BF Calculation
-if [ -d "$ROOT_DIRRECTORY/$jetbrainsBFCalculator" ] 
+cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
+if [ ! -z "$(ls -A)" ] 
 then
-  cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
   "./gradlew" --stacktrace sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath" -Pauthorship="$authorshipPath"
 else
   echo "Can not find JetBrains plugin"

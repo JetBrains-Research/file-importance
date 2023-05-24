@@ -13,8 +13,8 @@ ROOT_DIRRECTORY="$(pwd)"
 projectPath="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 graphMiner="DependencyGraph"
 graphAnalyzer="DependencyGraphAnalysis"
-BFCalculator="Truck-Factor"
-jetbrainsBFCalculator="risky-patterns-idea"
+BFCalculator="ABF"
+jetbrainsBFCalculator="JBF"
 outputFolderName="output-test"
 rm -rf "$outputFolderName" 
 mkdir "$outputFolderName"
@@ -54,7 +54,13 @@ if [ -f "$jetbrainsMergeFilePath" ]
 then
   mv -f "$jetbrainsMergeFilePath" "$jetbrainsMergeFilePath-tmp"
 fi
-"./gradlew" --stacktrace sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath" -Pauthorship="$authorshipPath"
+
+if [ ! -z "$(ls -A)" ] 
+then
+  "./gradlew" --stacktrace sigExport -Pprj="$projectPath" -Pout="$jetbrainsBFResult" -Ptarget="$targetDirectoriesPath" -Psig="$featuresFilePath" -Pauthorship="$authorshipPath"
+else
+  echo "Can not find JetBrains plugin"
+fi
 
 if [ -f "$jetbrainsMergeFilePath-tmp" ]
 then

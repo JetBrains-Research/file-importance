@@ -16,8 +16,8 @@ resetDate="$4"
 #Folder names
 graphMiner="DependencyGraph"
 BFCalculator="Truck-Factor"
-jetbrainsBFCalculator="risky-patterns-idea"
-graphAnalyzer="DependencyGraphAnalysis"
+jetbrainsBFCalculator="ABF"
+graphAnalyzer="JBF"
 repositories="repositories"
 
 mkdir -p "$repositories"
@@ -59,9 +59,9 @@ pip3 install -r requirements.txt
 cd "$ROOT_DIRRECTORY/$graphMiner"
 "./gradlew" --stacktrace importProject -Pprojectpath="$projectPath"
 
-if [ -d "$ROOT_DIRRECTORY/$jetbrainsBFCalculator" ] 
+cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
+if [ ! -z "$(ls -A)" ]
 then
-  cd "$ROOT_DIRRECTORY/$jetbrainsBFCalculator"
   "./gradlew" --stacktrace importProject -Pprj="$projectPath"
 else
   echo "Can not find JetBrains plugin"
