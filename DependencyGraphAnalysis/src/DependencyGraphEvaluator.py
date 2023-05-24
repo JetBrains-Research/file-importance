@@ -1,11 +1,12 @@
-import json
-import networkx as nx
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.cluster import KMeans
+import argparse
 import random
-import sys
+import time
+
+import networkx as nx
+import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
+from sklearn.cluster import KMeans
 
 measures = [
     (nx.pagerank, "pageRank"),
@@ -13,31 +14,25 @@ measures = [
     (nx.in_degree_centrality, "inDegreeCentrality"),
     (nx.out_degree_centrality, "outDegreeCentrality"),
     (nx.betweenness_centrality, "betweennessCentrality"),
-    (nx.eigenvector_centrality, "eigenvectorCentrality"),
-    (nx.katz_centrality, "katzCentrality")
+    # (nx.eigenvector_centrality, "eigenvectorCentrality"),
+    # (nx.katz_centrality, "katzCentrality")
 ]
 
 
-def log(log):
-    print(f"****Analyzer**** {log}")
+def log(msg):
+    print(f"****Analyzer**** {msg}")
 
 
 def generate_random_color():
-    color = "%06x" % random.randint(0, 0xFFFFFF)
+    color = "%06x" % random.randint(0, 0xFFFFFF)  # it is also possible to generate a triplet of 0..255 ints
     return f"#{color}"
 
 
 def load_graph(path):
     log(f"Loading graph from {path}")
-    results = []
     with open(path) as f:
-        jsonData = json.load(f)
-        for jsonEdge in jsonData:
-            results += [(jsonEdge['source'], jsonEdge['destination'])]
-
-    graph = nx.DiGraph()
-    graph.add_edges_from(results)
-    return graph
+        data_frame = pd.read_csv(f)
+        return nx.from_pandas_edgelist(data_frame, source="source", target="destination", create_using=nx.DiGraph())
 
 
 def create_feature_vector(graph):
@@ -55,10 +50,12 @@ def create_feature_vector(graph):
     return features, names
 
 
-def cluster_nodes(features):
+def cluster_nodes(features, number_of_clusters=2):
     log("Clustering nodes")
-    kmeans = KMeans(n_clusters=2, random_state=0).fit(features)
-    color_labels = [generate_random_color() for l in np.unique(kmeans.labels_)]
+
+    kmeans = KMeans(n_clusters=number_of_clusters, random_state=0).fit(features)
+    # kmeans doesn't have outliers, so you can generate a color for each cluster
+    color_labels = [generate_random_color() for _ in range(number_of_clusters)]
     color_map = [color_labels[l] for l in kmeans.labels_]
 
     return color_map
@@ -73,32 +70,38 @@ def print_banner():
               /_/                                     /____/                        /____/                   """)
 
 
-print_banner()
-# Parsing parameters
-graph_file_path = sys.argv[1]
-if graph_file_path is None:
-    log("Please enter graph file path")
-    exit(1120)
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="dependency graph evaluator")
 
-output_image_path = sys.argv[2]
-if output_image_path is None:
-    log("Please enter output image file path")
-    exit(1121)
+    parser.add_argument("-g", "--graph_file_path", type=str, help="path to the graph", required=True)
+    parser.add_argument("-i", "--output_image_path", type=str, help="path to output images", required=True)
+    parser.add_argument("-f", "--output_features_path", type=str, help="path to output features", required=True)
+    args = parser.parse_args()
 
-output_features_path = sys.argv[3]
-if output_features_path is None:
-    log("Please enter output features file path")
-    exit(1122)
+    return args.graph_file_path, args.output_image_path, args.output_features_path
 
-graph = load_graph(graph_file_path)
-features, feature_names = create_feature_vector(graph)
-# color_map = cluster_nodes(features)
-#
-# nx.draw(graph, node_color=color_map, with_labels=True)
-# # plt.show()
-# log(f"Output result diagram to {output_image_path}")
-# plt.savefig(output_image_path)
 
-log(f"Output features to {output_features_path}")
-df = pd.DataFrame(features, columns=feature_names, index=list(graph.nodes))
-df.to_csv(output_features_path)
+def draw_graph(graph, features, output_path):
+    color_map = cluster_nodes(features)
+    nx.draw(graph, node_color=color_map, with_labels=True)
+    # plt.show()
+    log(f"Output result diagram to {output_path}")
+    plt.savefig(output_path)
+
+
+if __name__ == "__main__":
+    print_banner()
+
+    graph_file_path, output_image_path, output_features_path = parse_arguments()
+
+    graph = load_graph(graph_file_path)
+
+    t = time.time()
+    features, feature_names = create_feature_vector(graph)
+    log(f"feature extraction time is {time.time() - t}")
+
+    # draw_graph(graph, features, output_image_path)
+
+    log(f"Output features to {output_features_path}")
+    df = pd.DataFrame(features, columns=feature_names, index=list(graph.nodes))
+    df.to_csv(output_features_path)

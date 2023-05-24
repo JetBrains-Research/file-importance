@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>org.example.dependencies-plugin-idea</id>
+    <id>extractDependencies</id>
     <name>Dependencies-Miner</name>
     <vendor>ictl</vendor>
 
@@ -9,11 +9,13 @@
          on how to target different products -->
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.kotlin</depends>
 
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <appStarter implementation="org.jetbrains.research.ictl.fileimportance.IdeRunner"/>
+        <appStarter implementation="org.jetbrains.research.ictl.fileimportance.ExportDependenciesRunner" id="extractDependencies"/>
+        <appStarter implementation="org.jetbrains.research.ictl.fileimportance.ImportProjectRunner" id="importProject"/>
     </extensions>
 
     <actions>

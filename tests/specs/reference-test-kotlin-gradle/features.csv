@@ -1,0 +1,10 @@
+,pageRank,degreeCentrality,inDegreeCentrality,outDegreeCentrality,betweennessCentrality
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/Main.kt,0.161500175515819,0.875,0.125,0.75,0.21428571428571427
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/ITestCalculator.kt,0.19487544096531265,0.375,0.375,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/CalculatorScript.kt,0.0856593281815401,0.125,0.125,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/AnonymousCalculator.kt,0.0856593281815401,0.25,0.125,0.125,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/LambdaCalculator.kt,0.0856593281815401,0.125,0.125,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/Utils.kt,0.1220646991094643,0.25,0.25,0.0,0.0
+src/main/kotlin/org/jetbrains/research/ictl/fileimportance/test/TestCalculatorImpl.kt,0.0856593281815401,0.375,0.125,0.25,0.0
+.idea/.gitignore,0.06277999577194995,0.125,0.0,0.125,0.0
+.idea/workspace.xml,0.11614237591129342,0.25,0.125,0.125,0.125

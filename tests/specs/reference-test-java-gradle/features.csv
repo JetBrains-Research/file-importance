@@ -1,0 +1,9 @@
+,pageRank,degreeCentrality,inDegreeCentrality,outDegreeCentrality,betweennessCentrality
+src/main/java/org/jetbrains/research/ictl/fileimportance/test/Main.java,0.08555040688206995,0.7142857142857142,0.0,0.7142857142857142,0.0
+src/main/java/org/jetbrains/research/ictl/fileimportance/test/ICalculator.java,0.27025430919704785,0.42857142857142855,0.42857142857142855,0.0,0.0
+src/main/java/org/jetbrains/research/ictl/fileimportance/test/CalculatorImpl.java,0.10009405606301024,0.2857142857142857,0.14285714285714285,0.14285714285714285,0.0
+src/main/java/org/jetbrains/research/ictl/fileimportance/test/Utils.java,0.10009405606301024,0.14285714285714285,0.14285714285714285,0.0,0.0
+src/main/java/org/jetbrains/research/ictl/fileimportance/test/AnonymousCalc.java,0.10009405606301024,0.2857142857142857,0.14285714285714285,0.14285714285714285,0.0
+src/main/java/org/jetbrains/research/ictl/fileimportance/test/LambdaCalculator.java,0.10009405606301024,0.14285714285714285,0.14285714285714285,0.0,0.0
+.idea/.gitignore,0.08555040688206995,0.14285714285714285,0.0,0.14285714285714285,0.0
+.idea/workspace.xml,0.15826865278677132,0.14285714285714285,0.14285714285714285,0.0,0.0
