@@ -1,5 +1,6 @@
 import argparse
 import json
+import os.path
 import sys
 
 import numpy as np
@@ -34,10 +35,7 @@ def get_args():
 
 
 def load_inputs(input_files):
-    inputs = []
-    for file_path in input_files:
-        inputs += [load_data(file_path)]
-    return inputs
+    return [load_data(file_path) for file_path in input_files if os.path.isfile(file_path)]
 
 
 def normalize_path(path):
@@ -71,6 +69,8 @@ def merge_inputs(inputs):
 
 
 def load_authorship_info(authorship_file):
+    if not os.path.isfile(authorship_file):
+        return None
     with open(authorship_file) as json_file:
         data = json.load(json_file)
         for d in data:
@@ -89,6 +89,9 @@ def calculate_disagreement(data):
 
 
 def write_authorship_info(workbook, data, authorship_info):
+    if authorship_info is None:
+        return
+
     worksheet = workbook.add_worksheet("Survey Suggestions")
 
     for i in range(2, 5):
@@ -261,8 +264,9 @@ def write_BF_Info(workbook, data):
 def get_ordered_BF_Info(order, info):
     results = []
     for o in order:
-        i = next(i for i in info if i["significanceIndicator"] == o[0])
-        results += [i]
+        i = next((i for i in info if i["significanceIndicator"] == o[0]), None)
+        if i is not None:
+            results += [i]
 
     return results
 
