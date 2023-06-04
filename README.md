@@ -1,7 +1,7 @@
 # BFSig
 BFSig is a Bus Factor(BF) estimator. The current version of BFSig is optimized to estimate BF for Java and Kotlin projects. However, it can evaluate almost all programming languages with the correct configuration.
 
-BFSig is sponsered by JetBrains Research and Bilkent University.
+BFSig is sponsored by JetBrains Research and Bilkent University (Through TUBİTAK 3501 project: 121E584)).
 
 ## Description
 BFSig is a mutation of state-of-the-art BF estimators to weight the influence of different files according to their topological significance extracted from the project's dependency graph. In addition to the whole project, BFSig evaluates BF information for subfolders of a given repository.
