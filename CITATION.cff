@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+preferred-citation:
+  type: conference-paper
+  title: "Bfsig: Leveraging file significance in bus factor estimation"
+  authors:
+    - family-names: Haratian
+      given-names: Vahid
+    - family-names: Evtikhiev
+      given-names: Mikhail
+    - family-names: Derakhshanfar
+      given-names: Pouria
+    - family-names: Tüzün
+      given-names: Eray
+    - family-names: Kovalenko
+      given-names: Vladimir
+  year: 2023
+  collection-title: "Proceedings of the 31st ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering"
+  pages:
+    start: 1926
+    end: 1936
+  publisher: "ACM"
